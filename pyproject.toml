@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wawi"
+description = "WAwe and WInd response prediction"
+requires-python = ">= 3.6"
+
+readme = "README.md"
+license = {file = "LICENSE"}
+authors = [
+    {name = "Knut A. Kvaale", email = "knut.a.kvale@ntnu.no"},
+    {name = "Ole Øiseth", email = "ole.oiseth@ntnu.no"},
+    {name = "Aksel Fenerci", email = "aksel.fenerci@ntnu.no"}
+    {name = "Øivind Wiig Petersen", email = "oyvind.w.petersen@ntnu.no"},
+]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering",
+]
+dynamic = ["version"]
+dependencies = ["plotly", "pandas", "numpy", "pyvista[jupyter]>=0.38.1",
+                      "scikit-learn", "trame", "ipywidgets", "pyvistaqt"]
+
+
+[tool.setuptools]
+packages = ["wawi"]
+
+[tool.setuptools.dynamic]
+version = {attr = "wawi.__version__"}
+
+[project.urls]
+repository = "https://github.com/knutankv/wawi"
+documentation = "https://knutankv.github.io/wawi/"
