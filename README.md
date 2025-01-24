@@ -26,7 +26,7 @@ Quick start
 
 Examples
 =======================
-Examples are provided as Jupyter Notebooks in the [examples folder](https://github.com/knutankv/wawi/tree/master/examples).
+Examples are provided as Jupyter Notebooks in the [examples folder](https://github.com/knutankv/wawi/tree/main/examples).
 
 References
 =======================
