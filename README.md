@@ -1,4 +1,4 @@
-![WAWI logo](wawi-logo-animated.svg)
+![WAWI logo](https://raw.githubusercontent.com/knutankv/wawi/main/wawi-logo-animated.svg)
 =======================
 
 What is wawi?
