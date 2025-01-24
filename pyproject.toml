@@ -12,7 +12,7 @@ license = {file = "LICENSE"}
 authors = [
     {name = "Knut A. Kvaale", email = "knut.a.kvale@ntnu.no"},
     {name = "Ole Øiseth", email = "ole.oiseth@ntnu.no"},
-    {name = "Aksel Fenerci", email = "aksel.fenerci@ntnu.no"}
+    {name = "Aksel Fenerci", email = "aksel.fenerci@ntnu.no"},
     {name = "Øivind Wiig Petersen", email = "oyvind.w.petersen@ntnu.no"},
 ]
 classifiers = [
