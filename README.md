@@ -17,7 +17,7 @@ pip install wawi
 or install directly from github:
 
 ```
-pip install git+https://www.github.com/knutankv/wawi.git@master
+pip install git+https://www.github.com/knutankv/wawi.git@main
 ```
 
 
