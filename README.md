@@ -3,7 +3,7 @@
 
 What is wawi?
 =======================
-[NOT PUBLISHED YET]
+WAWI is a Python toolbox for prediction of response of structures exposed to wind and wave excitation. The package is still under development in its alpha stage, and documentation and testing will be completed along the way.
 
 
 Installation 
