@@ -24,7 +24,7 @@ classifiers = [
 dynamic = ["version"]
 dependencies = ["plotly", "pandas", "numpy", "pyvista[jupyter]>=0.38.1",
                       "scikit-learn", "trame", "ipywidgets", "pyvistaqt",
-                      "git+https://www.github.com/knutankv/beef.git@master"]
+                      "beef@git+https://www.github.com/knutankv/beef.git@master"]
 
 
 [tool.setuptools]
