@@ -1,5 +1,8 @@
 __version__ = "0.0.2"
 
+__pdoc__ = dict()
+__pdoc__['module.name'] = False
+
 # Other packages
 import numpy as np
 import shutil
