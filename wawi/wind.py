@@ -724,7 +724,7 @@ def windaction(omega, S, load_coefficients, elements, T_wind,
             mean_wind = U(el.get_cog())         
             Vn = normal_wind(T_wind, el.T0)*mean_wind        # Find the normal wind
             BqBq = loadmatrix_fe(Vn, lc_fun(el), rho, B_fun(el), D_fun(el))
-            R1, R2 = loadvector(el.T0, BqBq, T_wind, el.L) # Obtain the load vector for each element
+            R1, R2 = loadvector(el.T0, BqBq(1), T_wind, el.L) # Obtain the load vector for each element
 
             RG[node1_dofs, :] = RG[node1_dofs, :] + R1   # Add the contribution from the element (end 1) to the system
             RG[node2_dofs, :] = RG[node2_dofs, :] + R2   # Add the contribution from the element (end 2) to the system

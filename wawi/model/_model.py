@@ -1081,6 +1081,7 @@ class Model:
             for sec in aero_sections:
                 phi = self.aero.get_phi(sec)
                 section = self.aero.sections[sec]
+                Admittance = None # not supported with this scheme
                 S = self.aero.get_generic_kaimal(group=sec)
                 els = self.aero.elements[sec]
                 Sae_m_fun = windaction(omega, S, section.all_lc, els, T, phi, 
