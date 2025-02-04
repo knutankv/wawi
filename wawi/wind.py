@@ -636,10 +636,10 @@ def loadmatrix_fe_static(V, load_coefficients, rho, B, D ):
     Cl = load_coefficients['Cl']
     Cm = load_coefficients['Cm']
         
-    BqBq = 1/2*rho*V**2*B*np.array([[ 0,            0       , 0 ],
-                                    [ D/B*Cd,       0       , 0 ],
-                                    [ 0,            0       , Cl  ],
-                                    [ 0,            B*Cm    , 0  ]])
+    BqBq = 1/2*rho*V**2*B*np.array([[ 0 ],
+                                    [ D/B*Cd ],
+                                    [ Cl  ],
+                                    [ -B*Cm ]])
     return BqBq
 
 def loadvector(T_el, Bq, T_wind, L, static = False):
@@ -660,15 +660,16 @@ def loadvector(T_el, Bq, T_wind, L, static = False):
  
     # Transform from wind coordinates to local element coordinates 
     
-    if static is False:
-        T = T_el @ T_wind.T   
-    else:
-        T = T_el @ T_wind.T @ np.ones( [3,1] )
+    T = T_el @ T_wind.T   
     
     T_full = blkdiag(T_el, 4)     # Block diagonal - repeated 4 times to transform both trans and rot DOFs at each node (2+2)
     
     # T_full.T transforms L-->G
-    R =  T_full.T @ G @ Bq @ T 
+    if static is False:
+        R =  T_full.T @ G @ Bq @ T 
+    else:
+        R =  T_full.T @ G @ Bq 
+        
     R1 =  R[0:6]         # Element node 1
     R2 =  R[6:12]        # Element node 2
 
