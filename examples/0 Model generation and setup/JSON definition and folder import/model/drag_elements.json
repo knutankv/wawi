@@ -1,0 +1,8 @@
+{
+    "mooring_wire":
+        {   "sections": "MooringWire",
+            "zrange": [-1e4, 0.0],
+            "rho": 1025.0,
+            "Cd": [0.1, 1.2, 1.2],
+            "D": 0.146}
+}

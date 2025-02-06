@@ -1,0 +1,9 @@
+plotly
+pandas
+numpy
+pyvista[jupyter]>=0.38.1
+scikit-learn
+trame
+ipywidgets
+pyvistaqt
+beefpy

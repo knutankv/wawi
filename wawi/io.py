@@ -48,7 +48,7 @@ def import_folder(model_folder, pontoon_stl='pontoon.stl', aero_sections='aero_s
 
     Notes
     ---------------
-    Add info here describing the structure and contents of all files. 
+    TODO: Add info here describing the structure and contents of all files. 
     
     See `importing-folder.ipynb` for a full example.
     '''

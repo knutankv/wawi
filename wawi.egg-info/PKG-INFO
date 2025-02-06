@@ -1,0 +1,87 @@
+Metadata-Version: 2.2
+Name: wawi
+Version: 0.0.3
+Summary: WAve and WInd response prediction
+Author-email: "Knut A. Kvåle" <knut.a.kvale@ntnu.no>, Ole Øiseth <ole.oiseth@ntnu.no>, Aksel Fenerci <aksel.fenerci@ntnu.no>, Øivind Wiig Petersen <oyvind.w.petersen@ntnu.no>
+License: MIT License
+        
+        Copyright (c) 2025 Knut Andreas Kvåle
+        
+        Permission is hereby granted, free of charge, to any person obtaining a copy
+        of this software and associated documentation files (the "Software"), to deal
+        in the Software without restriction, including without limitation the rights
+        to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+        copies of the Software, and to permit persons to whom the Software is
+        furnished to do so, subject to the following conditions:
+        
+        The above copyright notice and this permission notice shall be included in all
+        copies or substantial portions of the Software.
+        
+        THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+        LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+        OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+        SOFTWARE.
+        
+Project-URL: repository, https://github.com/knutankv/wawi
+Project-URL: documentation, https://knutankv.github.io/wawi/
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 3
+Classifier: Topic :: Scientific/Engineering
+Requires-Python: >=3.6
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: plotly
+Requires-Dist: pandas
+Requires-Dist: numpy
+Requires-Dist: pyvista[jupyter]>=0.38.1
+Requires-Dist: scikit-learn
+Requires-Dist: trame
+Requires-Dist: ipywidgets
+Requires-Dist: pyvistaqt
+Requires-Dist: beefpy
+
+![WAWI logo](https://raw.githubusercontent.com/knutankv/wawi/main/wawi-logo-animated.svg)
+=======================
+
+What is wawi?
+=======================
+WAWI is a Python toolbox for prediction of response of structures exposed to wind and wave excitation. The package is still under development in its alpha stage, and documentation and testing will be completed along the way.
+
+
+Installation 
+========================
+Either install via PyPI as follows:
+
+```
+pip install wawi
+```
+
+or install directly from github:
+
+```
+pip install git+https://www.github.com/knutankv/wawi.git@main
+```
+
+
+Quick start
+=======================
+
+Examples
+=======================
+Examples are provided as Jupyter Notebooks in the [examples folder](https://github.com/knutankv/wawi/tree/main/examples).
+
+References
+=======================
+
+Citation
+=======================
+Zenodo research entry:
+
+Support
+=======================
+Please [open an issue](https://github.com/knutankv/wawi/issues/new) for support.
+
