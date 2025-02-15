@@ -610,10 +610,10 @@ def generic_kaimal_matrix(omega, nodes, T_wind, A, sigma, C, Lx, U, options=None
     return SvSv
 
 
-def loadmatrix_fe(V, load_coefficients, rho, B, D, Admittance = None):
+def loadmatrix_fe(V, load_coefficients, rho, B, D, admittance=None):
 
-    if Admittance is None :
-        Admittance = lambda omega_k: np.ones( (4,3) )
+    if admittance is None :
+        admittance = lambda omega_k: np.ones( (4,3) )
 
     Cd = load_coefficients['Cd']
     dCd = load_coefficients['dCd']
@@ -623,7 +623,7 @@ def loadmatrix_fe(V, load_coefficients, rho, B, D, Admittance = None):
     dCm = load_coefficients['dCm']
     
     # Equation 7 from Oiseth, 2010
-    BqBq = lambda omega_k: 1/2*rho*V*B*Admittance(omega_k*B/V/2/np.pi)*np.array([[0,            0,          0],
+    BqBq = lambda omega_k: 1/2*rho*V*B*admittance(omega_k*B/V/2/np.pi)*np.array([[0,            0,          0],
                                                                                 [0,     2*D/B*Cd,          (D/B*dCd-Cl)],
                                                                                 [0,         2*Cl,          (dCl+D/B*Cd)],
                                                                                 [0,      -2*B*Cm,          -B*dCm]])
@@ -679,7 +679,7 @@ def loadvector(T_el, Bq, T_wind, L, static = False):
 
 def windaction(omega, S, load_coefficients, elements, T_wind, 
                phi, B, D, U, omega_reduced=None, rho=1.225, print_progress=True,
-               section_lookup=None, nodes=None, Admittance = None):
+               section_lookup=None, nodes=None, admittance=None):
     
     if nodes is None:
         nodes = list(set([a for b in [el.nodes for el in elements] for a in b]))
@@ -705,7 +705,7 @@ def windaction(omega, S, load_coefficients, elements, T_wind,
         lc_fun = lambda el: load_coefficients
         B_fun = lambda el: B
         D_fun = lambda el: D
-        Admittance_fun = lambda el: Admittance
+        admittance_fun = lambda el: admittance
     else:
         def get_sec(el):
             for key in section_lookup:
@@ -716,7 +716,7 @@ def windaction(omega, S, load_coefficients, elements, T_wind,
         B_fun = lambda el: B[get_sec(el)]
         D_fun = lambda el: D[get_sec(el)]
     
-    if Admittance is None: # omit the frequency loop if ADmittance is not included - faster !
+    if admittance is None: # omit the frequency loop if ADmittance is not included - faster !
         RG = np.zeros([len(nodes)*n_dofs, 3])
         for el in elements:            
             node1_dofs = el.nodes[0].global_dofs
@@ -748,7 +748,7 @@ def windaction(omega, S, load_coefficients, elements, T_wind,
                 genSqSq_reduced[:, :, k] = phiT_RG_block @ S(omega_k) @ phiT_RG_block.T  # to modal coordinates
 
     else: # admittance is given - triple loop (the old way, slower)
-        Admittance_fun = lambda el: Admittance[get_sec(el)]
+        admittance_fun = lambda el: admittance[get_sec(el)]
 
         for k, omega_k in enumerate(omega_reduced): 
             if print_progress:
@@ -764,7 +764,7 @@ def windaction(omega, S, load_coefficients, elements, T_wind,
 
                 mean_wind = U(el.get_cog())         
                 Vn = normal_wind(T_wind, el.T0)*mean_wind        # Find the normal wind
-                BqBq = loadmatrix_fe(Vn, lc_fun(el), rho, B_fun(el), D_fun(el), Admittance = Admittance_fun(el))
+                BqBq = loadmatrix_fe(Vn, lc_fun(el), rho, B_fun(el), D_fun(el), admittance=admittance_fun(el))
                 R1, R2 = loadvector(el.T0, BqBq(omega_k), T_wind, el.L) # Obtain the load vector for each element
 
                 RG[node1_dofs, :] = RG[node1_dofs, :] + R1   # Add the contribution from the element (end 1) to the system

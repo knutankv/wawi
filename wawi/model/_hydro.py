@@ -677,6 +677,8 @@ thetaU (current)={self.thetaU*180/np.pi:.1f}deg
 
         if 'name' in data:
             name = data['name']
+        else:
+            name = 'Unnamed seastate'
         
         if 'plot_label' in data:
             plot_label = data['plot_label']

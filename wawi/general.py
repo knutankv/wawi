@@ -162,8 +162,6 @@ def merge_tr_phi(phi_trans, phi_rot, thread_stack=True):
         thread_stack: specify if the matrices should be thread in or not (if True, 3 translational DOFs and 3 rotational DOFs ...) (default = True)
     Returns:
         phi_combined: phi matrix with all DOFs
-
-    AAJ / Knut Andreas Kvaale, 2017
     """
 
     Ndofs = phi_trans.shape[0]*2
@@ -204,7 +202,6 @@ def interp1z(z,mat,znew):
     Returns:
         matnew: interpolated 3D matrix (Numpy array)
 
-    NTNU / Knut Andreas Kvaale, 2018
     """   
         
     matnew = np.zeros([1,len(mat[0]),len(mat[0][0])])
@@ -226,7 +223,6 @@ def interpolate_3d(z, mat, zi):
     Returns:
         mati: interpolated matrix
 
-    NTNU / Knut Andreas Kvaale, 2017
     """
     mat_shape = np.shape(mat)
     mati = np.zeros([mat_shape[0], mat_shape[1], len(zi)])
@@ -280,7 +276,6 @@ def rodrot(theta, rotaxis=[0, 0, 1], style='row'):
     Returns:
         T: transformation matrix in NumPy format
 
-    NTNU / Knut Andreas Kvaale, 2017
     """
 
     axis = np.asarray(rotaxis)

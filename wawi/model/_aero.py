@@ -98,7 +98,7 @@ def ensure_list_of_ints(d):
 
 
 class AeroSection:
-    def __init__(self, D=None, B=None, ADs=None, Cd=0.0, dCd=0.0, Cm=0.0, dCm=0.0, Cl=0.0, dCl=0.0, Admittance = None):
+    def __init__(self, D=None, B=None, ADs=None, Cd=0.0, dCd=0.0, Cm=0.0, dCm=0.0, Cl=0.0, dCl=0.0, admittance=None):
         self.D = D
         self.B = B
         self.Cd = Cd
@@ -107,7 +107,7 @@ class AeroSection:
         self.dCm = dCm
         self.Cl = Cl
         self.dCl = dCl
-        self.Admittance = Admittance
+        self.admittance = admittance
         
         if ADs is None:
             self.add_quasisteady_ads()
@@ -129,7 +129,7 @@ class AeroSection:
         self.ADs = ADs(**quasisteady_ads(self.D, self.B, self.all_lc), ad_type='quasisteady')
 
     def __str__(self):
-        return f"<AeroSection> (D = {self.D}, B = {self.B}, Cd = {self.Cd}, Cd' = {self.dCd}, Cl = {self.Cl}, Cl' = {self.dCl}, Cm = {self.Cm}, Cm' = {self.dCm}, Admittance = {self.Admittance})"
+        return f"<AeroSection> (D = {self.D}, B = {self.B}, Cd = {self.Cd}, Cd' = {self.dCd}, Cl = {self.Cl}, Cl' = {self.dCl}, Cm = {self.Cm}, Cm' = {self.dCm}, Admittance = {self.admittance})"
         
 
 '''

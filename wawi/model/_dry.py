@@ -18,14 +18,14 @@ class ModalDry:
 
         # Variations of input of m,k and omega_n
         if m is not None and omega_n is not None:
-            self._k = m*omega_n**2
-            self._m = m
+            self._k = np.array(m)*np.array(omega_n)**2
+            self._m = np.array(m)
         elif k is not None and omega_n is not None:
-            self._k = k
-            self._m = k/omega_n**2
+            self._k = np.array(k)
+            self._m = np.array(k)/np.array(omega_n)**2
         else:
-            self._k = k
-            self._m = m
+            self._k = np.array(k)
+            self._m = np.array(m)
         
         self.m_min = m_min
         self._xi0 = xi0
