@@ -399,7 +399,7 @@ class Model:
         part = fe.Part(node_matrix, element_matrix)
 
         for element in part.elements:
-            element.e2 = np.array([0,1,0])
+            element.assign_e2(np.array([0,1,0]))
             
         part.assign_global_dofs()
         part.update_all_geometry()
@@ -480,7 +480,7 @@ class Model:
         if title is None:
             title = f'Mode {mode_ix+1}'
             
-        pl = self.plot(plot_states=plot_states, title=title, plot_wind_axes=plot_wind_axes, **kwargs)
+        pl = self.plot(plot_states=plot_states, title=title, plot_wind_axes=plot_wind_axes, plot_wave_direction=plot_wave_direction, **kwargs)
         return pl
     
     def export_modeshapes(self, folder, n_modes=None, format='pdf', title=None, zoom=1.0, **kwargs):
@@ -980,6 +980,8 @@ class Model:
         self.results.omega = omega*1
         self.results.S = Srr_m*1
 
+    def assign_windstate(self, windstate):
+        self.aero.windstate = windstate
 
     def assign_seastate(self, seastate=None):
         # Reset pontoon settings
@@ -1069,11 +1071,11 @@ class Model:
             D = {sec: self.aero.sections[sec].D for sec in aero_sections}                       # dict with all load coefficients
             S = self.aero.get_generic_kaimal(nodes=nodes)
             section_lookup = {sec: self.aero.elements[sec] for sec in aero_sections}
-            Admittance = {sec: self.aero.sections[sec].Admittance for sec in aero_sections}  
+            admittance = {sec: self.aero.sections[sec].admittance for sec in aero_sections}  
 
             Sae_m_fun = windaction(omega, S, lc, els, T, phi, 
                                    B, D, U, print_progress=print_progress, rho=rho,
-                                   section_lookup=section_lookup, nodes=nodes, Admittance = Admittance, **kwargs)   
+                                   section_lookup=section_lookup, nodes=nodes, admittance=admittance, **kwargs)   
             
             Sae_m = np.stack([Sae_m_fun(om_k) for om_k in omega], axis=2)
 
@@ -1081,11 +1083,11 @@ class Model:
             for sec in aero_sections:
                 phi = self.aero.get_phi(sec)
                 section = self.aero.sections[sec]
-                Admittance = None # not supported with this scheme
+                admittance = None # not supported with this scheme
                 S = self.aero.get_generic_kaimal(group=sec)
                 els = self.aero.elements[sec]
                 Sae_m_fun = windaction(omega, S, section.all_lc, els, T, phi, 
-                                    section.B, section.D, U, print_progress=print_progress, rho=rho, Admittance = Admittance, **kwargs)
+                                    section.B, section.D, U, print_progress=print_progress, rho=rho, admittance=admittance, **kwargs)
 
                 Sae_m = np.stack([Sae_m_fun(om_k) for om_k in omega], axis=2) + Sae_m
 

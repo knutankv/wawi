@@ -105,7 +105,7 @@ def import_folder(model_folder, pontoon_stl='pontoon.stl', aero_sections='aero_s
                 common_ptype_settings = pontoon_type_settings.pop('*')
             
         except:
-            print('Valid pontoon types file not found. No pontoon_types definitions applied.')
+            print('Valid pontoon type settings file not found. No definitions applied.')
             pontoon_type_settings = {}
 
     else:
@@ -152,22 +152,28 @@ def import_folder(model_folder, pontoon_stl='pontoon.stl', aero_sections='aero_s
     
     # Modal dry object 
     if 'xi0' in modal:
-        xi0 = np.array(modal['xi0'])
+        xi0 = np.array(modal.pop('xi0'))
     else:
         xi0 = 0.0
         
     if 'm_min' in modal:
-        m_min = modal['m_min']
+        m_min = modal.pop('m_min')
     else:
         m_min = 0.0
         
     if 'phi_x' in modal:
-        phi_x = modal['phi_x']
+        phi_x = modal.pop('phi_x')
     else:
         phi_x = None
-        
-    modal_dry = ModalDry(modal['phi'], m=np.array(modal['m']), k=np.array(modal['k']), 
-                         local_phi=modal['local'], xi0=xi0, phi_x=phi_x, m_min=m_min)
+    
+    if 'local' in modal:
+        local_phi = modal.pop('local')
+    else:
+        local_phi = False    
+    
+    phi = modal.pop('phi')
+
+    modal_dry = ModalDry(phi, xi0=xi0, local_phi=local_phi, phi_x=phi_x, m_min=m_min, **modal)
     
     # Element definition
     if element_data != {}:
@@ -184,7 +190,25 @@ def import_folder(model_folder, pontoon_stl='pontoon.stl', aero_sections='aero_s
         node_matrix = np.array(element_data['node_matrix'])
         node_matrix[:,0] = node_matrix[:,0].astype(int)
         element_matrix = np.array(element_data['element_matrix'])
-        
+        element_matrix = element_matrix.astype(int)
+
+        # Remove elements without valid nodes
+        remove_ix = []
+        remove_els = []
+
+        for ix,row in enumerate(element_matrix):
+            el,node1,node2 = row
+            # print(row)
+
+            if (node1 not in node_matrix[:,0].astype(int)) or (node2 not in node_matrix[:,0].astype(int)):
+               remove_ix.append(ix) 
+               remove_els.append(el)
+
+        if len(remove_els)>0:
+            print(f'Elements {remove_els} do not have valid nodes - not included in model.')
+            
+        element_matrix = np.delete(element_matrix, remove_ix, axis=0)            
+
         eldef = Part(node_matrix, element_matrix, sections=sections,
                      assemble=False, forced_ndofs=6)
             
@@ -211,7 +235,6 @@ def import_folder(model_folder, pontoon_stl='pontoon.stl', aero_sections='aero_s
             for el_label in elements:
                 el = eldef.get_element(int(el_label))
 
-
                 el.assign_e2(e2)
                 el.assign_e3(e3)
 
@@ -219,7 +242,7 @@ def import_folder(model_folder, pontoon_stl='pontoon.stl', aero_sections='aero_s
     else:
         eldef = None
 
-    # Create model object
+    # Create model object (only hydro part)
     model = Model.from_nodes_and_types(pontoon_nodes, [ptypes[pt] for pt in pontoon_types], modal_dry=modal_dry, 
                                        rotation=pontoon_rotation, eldef=eldef, labels=pontoon_names)
     
@@ -249,7 +272,7 @@ def import_folder(model_folder, pontoon_stl='pontoon.stl', aero_sections='aero_s
             model.assign_drag_elements(data)
         except:
             print('Specified drag_elements file found or invalid. No drag elements defined.')
-            
+    
     model.connect_eldef()
     model.assign_dry_modes()
     

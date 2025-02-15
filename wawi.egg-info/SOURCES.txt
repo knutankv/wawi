@@ -1,13 +1,11 @@
 LICENSE
 README.md
 pyproject.toml
-tests/test_IABSE_step11a - Copy.py
 tests/test_IABSE_step11a.py
 tests/test_IABSE_step11c.py
 tests/test_IABSE_step2a.py
 tests/test_wind.py
 wawi/__init__.py
-wawi/abq.py
 wawi/fe.py
 wawi/general.py
 wawi/identification.py
