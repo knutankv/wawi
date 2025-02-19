@@ -72,7 +72,7 @@ References
 
 Citation
 =======================
-Zenodo research entry:
+Zenodo research entry: [![DOI](https://zenodo.org/badge/921621297.svg)](https://doi.org/10.5281/zenodo.14895014)
 
 Support
 =======================
