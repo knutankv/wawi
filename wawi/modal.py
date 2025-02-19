@@ -17,7 +17,7 @@ def maxreal(phi):
         complex-valued modal transformation matrix, with vectors rotated to have maximum real parts
     """   
 
-    angles = np.expand_dims(np.arange(0,np.pi/2, 0.01), axis=0)
+    angles = np.expand_dims(np.arange(0,np.pi, 0.01), axis=0)
     phi_max_real = np.zeros(np.shape(phi)).astype('complex')
     for mode in range(0,np.shape(phi)[1]):
         rot_mode = np.dot(np.expand_dims(phi[:, mode], axis=1), np.exp(angles*1j))
