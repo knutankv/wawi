@@ -1147,13 +1147,13 @@ class Model:
             if not self.seastate.homogeneous:
                 raise ValueError('Only method standard" is supported for inhomogeneous conditions')
             # Sqq0 = transform_3dmat(waveaction_fft(self.hydro.pontoons, omega, **kwargs), self.hydro.phi)
-            raise ValueError('FFT not implemented yet. Will be at some point.')
+            raise NotImplementedError('FFT not implemented yet. Will be at some point.')
         
         elif method in ['fourier', 'cos2s', 'cos2s-fourer'] :
             if not self.hydro.homogeneous:
                 raise ValueError('Only method standard" is supported for inhomogeneous conditions')
             
-            raise ValueError('Fourier (cos 2s) not implemented yet. Will be at some point.')
+            raise NotImplementedError('Fourier (cos 2s) not implemented yet. Will be at some point.')
         
         self.hydro.Sqq_hydro = interp1d(omega, Sqq0, kind=interpolation_kind, axis=2, fill_value=0.0, bounds_error=False)
             
