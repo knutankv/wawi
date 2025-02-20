@@ -860,19 +860,25 @@ class Model:
         self.results.lambd = lambd
         self.results.include_eig = include
 
-    def run_static(self):
-        self.evaluate_windaction_static()
-        self.aero.prepare_aero_matrices()
-        K = self.get_added_K(0) + self.dry_K
-        y = np.linalg.inv(K) @ self.f_static
-                
-        return y
+
+    def run_static(self, aero_sections=None, include_selfexctied=['aero']):
+        if not hasattr(self.aero, 'F0_m') or (self.aero.F0_m is None):     # check if already computed static forces
+            self.precompute_windaction(static=True, aero_sections=aero_sections)     # compute if not present
+
+        if ('aero' in include_selfexctied) and (self.aero is not None) and (self.aero.Kfun is None):
+            K_ae, __ = self.get_aero_matrices(omega_reduced=0, aero_sections=aero_sections)
+        else:
+            K_ae = 0.0
+
+        Ktot = -K_ae + self.dry_K
+        self.results.y_static = np.linalg.inv(Ktot) @ self.aero.F0_m
+      
 
     def run_freqsim(self, omega, omega_aero=None, omega_hydro=None, 
                     print_progress=True, interpolation_kind='linear',
                     max_rel_error=0.01, drag_iterations=0, tol=1e-2, include_action=['hydro', 'aero'],
                     include_selfexcited=['hydro', 'aero', 'drag_elements', 'drag_pontoons'], ensure_at_peaks=True, 
-                    theta_interpolation='linear', reset_Cquad_lin=True, merge_aero_sections=True, aero_sections=None):
+                    theta_interpolation='linear', reset_Cquad_lin=True, aero_sections=None):
 
         include_dict = self.establish_include_dict(include_selfexcited)
 
@@ -912,7 +918,7 @@ class Model:
             if hasattr(self.aero, 'Sqq_aero') and (self.aero.Sqq_aero is not None):
                 Sqq_m = Sqq_m + self.aero.Sqq_aero(omega)
             else:
-                Sqq_aero = self.evaluate_windaction(omega_aero, print_progress=print_progress, merge_sections=merge_aero_sections, aero_sections=aero_sections)
+                Sqq_aero = self.evaluate_windaction(omega_aero, print_progress=print_progress, aero_sections=aero_sections)
                 Sqq_m = Sqq_m + interp1d(omega_aero, Sqq_aero, kind=interpolation_kind, 
                                          axis=2, fill_value=0.0, bounds_error=False)(omega)
 
@@ -1049,7 +1055,7 @@ class Model:
         return self.hydro.phi.T @ Sqq0 @ self.hydro.phi
 
     
-    def evaluate_windaction(self, omega, aero_sections=None, print_progress=True, merge_sections=True, **kwargs):
+    def evaluate_windaction(self, omega=None, aero_sections=None, print_progress=True, static=False, **kwargs):
         if aero_sections is None:
             aero_sections = self.aero.elements.keys()
 
@@ -1058,86 +1064,46 @@ class Model:
         U = self.aero.windstate.U
         rho = self.aero.windstate.rho
 
-        if merge_sections:
-            els = [a for b in [self.aero.elements[sec] for sec in aero_sections] for a in b]   # all requested sections, flattened
-            eldef = self.eldef.get_element_subset(self.eldef.get_elements([el.label for el in els]), renumber=False)    # create new eldef for requested elements   
-            phi = self.get_dry_phi(key='full')[eldef.global_dofs, :]    # grab relevant phi components
-            eldef.assign_global_dofs()
-            nodes = eldef.nodes*1
-            els = eldef.elements*1
-            
-            lc = {sec: self.aero.sections[sec].all_lc for sec in aero_sections}                 # dict with all load coefficients
-            B = {sec: self.aero.sections[sec].B for sec in aero_sections}                       # dict with all load coefficients
-            D = {sec: self.aero.sections[sec].D for sec in aero_sections}                       # dict with all load coefficients
-            S = self.aero.get_generic_kaimal(nodes=nodes)
-            section_lookup = {sec: self.aero.elements[sec] for sec in aero_sections}
-            admittance = {sec: self.aero.sections[sec].admittance for sec in aero_sections}  
+        # Sections needs to be merged - all elements are therefore unwrapped
+        els = [a for b in [self.aero.elements[sec] for sec in aero_sections] for a in b]   # all requested sections, flattened
+        eldef = self.eldef.get_element_subset(self.eldef.get_elements([el.label for el in els]), renumber=False)    # create new eldef for requested elements   
+        phi = self.get_dry_phi(key='full')[eldef.global_dofs, :]    # grab relevant phi components
+        eldef.assign_global_dofs()
+        nodes = eldef.nodes*1
+        els = eldef.elements*1
+        
+        lc = {sec: self.aero.sections[sec].all_lc for sec in aero_sections}                 # dict with all load coefficients
+        B = {sec: self.aero.sections[sec].B for sec in aero_sections}                       # dict with all load coefficients
+        D = {sec: self.aero.sections[sec].D for sec in aero_sections}                       # dict with all load coefficients
+        S = self.aero.get_generic_kaimal(nodes=nodes)
+        section_lookup = {sec: self.aero.elements[sec] for sec in aero_sections}
 
+        if static:
+            F0_m = windaction_static(lc, els, T, phi, 
+                                B, D, U, print_progress=print_progress, rho=rho,
+                                section_lookup=section_lookup, nodes=nodes)  
+            return F0_m
+        else:
+            admittance = {sec: self.aero.sections[sec].admittance for sec in aero_sections}  
             Sae_m_fun = windaction(omega, S, lc, els, T, phi, 
-                                   B, D, U, print_progress=print_progress, rho=rho,
-                                   section_lookup=section_lookup, nodes=nodes, admittance=admittance, **kwargs)   
-            
+                                B, D, U, print_progress=print_progress, rho=rho,
+                                section_lookup=section_lookup, nodes=nodes, admittance=admittance, **kwargs)   
+        
             Sae_m = np.stack([Sae_m_fun(om_k) for om_k in omega], axis=2)
 
-        else:   #run sections one by one and assume independent/uncorrelated wind action (rarely relevant)
-            for sec in aero_sections:
-                phi = self.aero.get_phi(sec)
-                section = self.aero.sections[sec]
-                admittance = None # not supported with this scheme
-                S = self.aero.get_generic_kaimal(group=sec)
-                els = self.aero.elements[sec]
-                Sae_m_fun = windaction(omega, S, section.all_lc, els, T, phi, 
-                                    section.B, section.D, U, print_progress=print_progress, rho=rho, admittance=admittance, **kwargs)
-
-                Sae_m = np.stack([Sae_m_fun(om_k) for om_k in omega], axis=2) + Sae_m
-
-        return Sae_m
+            return Sae_m
     
-    def evaluate_windaction_static(self, aero_sections=None, print_progress=True, merge_sections=True, **kwargs):
-        if aero_sections is None:
-            aero_sections = self.aero.elements.keys()
+    def evaluate_windaction_static(self, aero_sections=None, print_progress=True, **kwargs):
+        return self.evaluate_windaction(aero_sections=None, print_progress=True, static=True, **kwargs)
 
-        Sae_m = 0.0
-        T = self.aero.windstate.T
-        U = self.aero.windstate.U
-        rho = self.aero.windstate.rho
+    def precompute_windaction(self, omega, include=['dynamic'], interpolation_kind='linear', **kwargs):
 
-        if merge_sections:
-            els = [a for b in [self.aero.elements[sec] for sec in aero_sections] for a in b]   # all requested sections, flattened
-            eldef = self.eldef.get_element_subset(self.eldef.get_elements([el.label for el in els]), renumber=False)    # create new eldef for requested elements   
-            phi = self.get_dry_phi(key='full')[eldef.global_dofs, :]    # grab relevant phi components
-            eldef.assign_global_dofs()
-            nodes = eldef.nodes*1
-            els = eldef.elements*1
-            
-            lc = {sec: self.aero.sections[sec].all_lc for sec in aero_sections}                 # dict with all load coefficients
-            B = {sec: self.aero.sections[sec].B for sec in aero_sections}                       # dict with all load coefficients
-            D = {sec: self.aero.sections[sec].D for sec in aero_sections}                       # dict with all load coefficients
-            section_lookup = {sec: self.aero.elements[sec] for sec in aero_sections}
-            
-            Sae_m_fun = windaction_static(lc, els, T, phi, 
-                                   B, D, U, print_progress=print_progress, rho=rho,
-                                   section_lookup=section_lookup, nodes=nodes)   
-            
-            Sae_m = Sae_m_fun
-
-        else:   #run sections one by one and assume independent/uncorrelated wind action (rarely relevant)
-            for sec in aero_sections:
-                phi = self.aero.get_phi(sec)
-                section = self.aero.sections[sec]
-                els = self.aero.elements[sec]
-                
-                Sae_m_fun = windaction_static(section.all_lc, els, T, phi, 
-                                    section.B, section.D, U, print_progress=print_progress, rho=rho, **kwargs)
-
-                Sae_m = [Sae_m_fun] + Sae_m
-        
-        self.f_static = Sae_m        
-        return Sae_m
-
-    def precompute_windaction(self, omega, interpolation_kind='linear', **kwargs):
-        self.aero.Sqq_aero = interp1d(omega, self.evaluate_windaction(omega, **kwargs), 
+        if 'dynamic' in include:
+            self.aero.Sqq_aero = interp1d(omega, self.evaluate_windaction(omega=omega, static=False, **kwargs), 
                                       kind=interpolation_kind, axis=2, fill_value=0.0, bounds_error=False)
+        if 'static' in include:
+            self.aero.F0_m = self.evaluate_windaction(static=True, **kwargs)
+
 
     def precompute_waveaction(self, omega, interpolation_kind='linear', method='standard', **kwargs):
         if method=='standard':

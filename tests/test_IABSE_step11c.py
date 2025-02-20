@@ -55,10 +55,7 @@ def iabse_11c_windstate(mean_v):
                                  Cuz=0.0, Cwz=0.0,
                                  Lux=200.0, Lwx=20.0,
                                  x_ref=[0,0,0], rho=1.22,
-                                   options = {
-                                       'spectra_type': 'vonKarman'
-                                       }
-                                    )
+                                 spectrum_type='vonKarman')
     return windstate
 
 davenport = lambda fred: 2*(7*fred-1+np.exp(-7*fred))/(7*fred)**2

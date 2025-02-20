@@ -526,7 +526,7 @@ def kaimal_auto(omega, Lx, A, sigma, V):
 
     return S/(2*np.pi)
 
-def von_Karman_auto(omega, Lx, sigma, V):
+def von_karman_auto(omega, Lx, sigma, V):
    
     A1 = [
         0.0,
@@ -552,7 +552,7 @@ def von_Karman_auto(omega, Lx, sigma, V):
     
     return S/(2*np.pi)
 
-def generic_kaimal_matrix(omega, nodes, T_wind, A, sigma, C, Lx, U, options=None):
+def generic_kaimal_matrix(omega, nodes, T_wind, A, sigma, C, Lx, U, spectrum_type='kaimal'):
     # Adopted from MATLAB version. `nodes` is list with beef-nodes.        
     V = np.zeros(len(nodes))      # Initialize vector with mean wind in all nodes
     Su = np.zeros([len(nodes), len(nodes)])     # One-point spectra for u component in all nodes
@@ -560,22 +560,16 @@ def generic_kaimal_matrix(omega, nodes, T_wind, A, sigma, C, Lx, U, options=None
     Sw = np.zeros([len(nodes), len(nodes)])     # One-point spectra for w component in all nodes
     xyz = np.zeros([len(nodes), 3])  # Nodes in wind coordinate system
 
-    if options is None:
-        options = {
-            'spectra_type': 'Kaimal'
-            }
-
     for node_ix, node in enumerate(nodes):
         xyz[node_ix,:] = (T_wind @ node.coordinates).T #Transform node coordinates to the wind coordinate system
         V[node_ix] = U(node.coordinates) # Mean wind velocity in the nodes
 
-        if 'spectra_type' in options:
-            if options['spectra_type'] == 'vonKarman':
-                Su[node_ix,:], Sv[node_ix,:], Sw[node_ix,:] = von_Karman_auto(omega, Lx, sigma, V[node_ix]) 
-            elif options['spectra_type'] == 'Kaimal':
-                Su[node_ix,:], Sv[node_ix,:], Sw[node_ix,:] = kaimal_auto(omega, Lx, A, sigma, V[node_ix]) # One point spectra for u component in all nodes
-        else: # use Kaimal (default)
-            Su[node_ix,:], Sv[node_ix,:], Sw[node_ix,:] = kaimal_auto(omega, Lx, A, sigma, V[node_ix])
+        if 'karman' in spectrum_type.lower()
+            Su[node_ix,:], Sv[node_ix,:], Sw[node_ix,:] = von_karman_auto(omega, Lx, sigma, V[node_ix]) 
+        elif spectrum_type.lower() == 'kaimal':
+            Su[node_ix,:], Sv[node_ix,:], Sw[node_ix,:] = kaimal_auto(omega, Lx, A, sigma, V[node_ix]) # One point spectra for u component in all nodes
+        else:
+            raise ValueError('spectrum_type must either be defined as "vonKarman"/"Karman" or "Kaimal"')
 
     x = xyz[:, 0]
     y = xyz[:, 1]
@@ -822,7 +816,7 @@ def windaction_static(load_coefficients, elements, T_wind,
             mean_wind = U(el.get_cog())         
             Vn = normal_wind(T_wind, el.T0)*mean_wind        # Find the normal wind
             BqBq = loadmatrix_fe_static(Vn, lc_fun(el), rho, B_fun(el), D_fun(el))
-            R1, R2 = loadvector(el.T0, BqBq, T_wind, el.L, static = True) # Obtain the load vector for each element
+            R1, R2 = loadvector(el.T0, BqBq, T_wind, el.L, static=True) # Obtain the load vector for each element
 
             RG[node1_dofs] = RG[node1_dofs] + R1[:,0]   # Add the contribution from the element (end 1) to the system
             RG[node2_dofs] = RG[node2_dofs] + R2[:,0]    # Add the contribution from the element (end 2) to the system
@@ -833,12 +827,11 @@ def windaction_static(load_coefficients, elements, T_wind,
         for node in nodes:
             ix = node.index
             n = np.r_[6*ix:6*ix+6]
-            RG_block[np.ix_(n)] = RG[n]     #verified with MATLAB version for beam example
+            RG_block[np.ix_(n)] = RG[n]
             
-               
-        genSqSq = phi.T @ RG_block 
+        genF = phi.T @ RG_block 
     
-    return genSqSq
+    return genF
 
 def K_from_ad(ad, V, w, B, rho):
     if w==0:

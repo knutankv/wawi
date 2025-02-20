@@ -50,9 +50,7 @@ def iabse_2a_windstate(mean_v):
                                   Cuz=10.0, Cwz=3.0,
                                   Lux=200.0, Lwx=20.0,
                                   x_ref=[0,0,0], rho=1.22,
-                                    options = {
-                                        'spectra_type': 'vonKarman'
-                                        }
+                                 spectrum_type='vonKarman'
                                   )
 
     return windstate

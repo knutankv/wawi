@@ -56,7 +56,7 @@ class Aero:
             nodes = self.eldef[group].nodes           
 
         return lambda om: generic_kaimal_matrix(om, nodes, self.windstate.T, self.windstate.A, 
-                                                self.windstate.sigma, self.windstate.C, self.windstate.Lx, self.windstate.U, options = self.windstate.options)
+                                                self.windstate.sigma, self.windstate.C, self.windstate.Lx, self.windstate.U, spectrum_type=self.windstate.spectrum_type)
 
     
 
@@ -139,7 +139,7 @@ WIND STATE CLASS
 class Windstate:
     def __init__(self, U0, direction, Au=0.0, Av=0.0, Aw=0.0, 
                  Iu=0.0, Iv=0.0, Iw=0.0, Cuy=0.0, Cuz=0.0, Cvy=0.0, Cvz=0.0, Cwy=0.0, Cwz=0.0, Lux=0.0, Lvx=0.0, Lwx=0.0,                
-                 x_ref=np.array([0,0,0]), scaling=None, name=None, options={}, rho=1.225):
+                 x_ref=np.array([0,0,0]), scaling=None, name=None, spectrum_type='kaimal', rho=1.225):
         
         self.U0 = U0
         self.direction = direction  # interpreted as positive in clock-wise direction and defines origin and not heading!
@@ -153,7 +153,7 @@ class Windstate:
         
         self.Lx = np.array([Lux, Lvx, Lwx])
         
-        self.options = options
+        self.spectrum_type = spectrum_type
 
 
         if scaling is None:
