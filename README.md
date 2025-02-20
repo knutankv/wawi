@@ -40,7 +40,8 @@ A windstate (U=20 m/s with origin 90 degrees and other required properties) and 
 U0 = 20.0
 direction = 90.0
 windstate = Windstate(U0, direction, Iu=0.136, Iw=0.072,
-Au=6.8, Aw=9.4, Cuy=10.0, Cwy=6.5, Lux=115, Lwx=9.58, spectrum_type='kaimal')
+                      Au=6.8, Aw=9.4, Cuy=10.0, Cwy=6.5,  
+                      Lux=115, Lwx=9.58, spectrum_type='kaimal')
 model.assign_windstate(windstate)
 
 # Sea state
