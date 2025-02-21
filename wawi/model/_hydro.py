@@ -13,11 +13,12 @@ from scipy.linalg import block_diag
 HYDRO SUBMODULE
 '''     
 class Hydro:    
-    def __init__(self, pontoons=None, phi_key='hydro', environment=None, phases_lead=False):
+    def __init__(self, pontoons=None, phi_key='hydro', environment=None, phases_lead=False, seastate=None):
             self.pontoons = pontoons
             self.phi_key = phi_key
             self._phases_lead = False
             self._phi = None
+            self.seastate = seastate
 
             if environment is None:
                 self.environment = Environment()

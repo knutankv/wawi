@@ -222,7 +222,7 @@ MODEL CLASS
 '''
 
 class Model:
-    def __init__(self, hydro=None, aero=None, eldef=None, modal_dry=None, seastate=None, 
+    def __init__(self, hydro=None, aero=None, eldef=None, modal_dry=None, seastate=None, windstate=None,
                  n_dry_modes=None, x0_wave=None, phases_lead=False,
                  use_multibody=True, avoid_eldef=False, drag_elements={}):
         
@@ -233,7 +233,6 @@ class Model:
         self.eldef = eldef  # BEEF ElDef object
         self.f_static = None
         
-        self.seastate = seastate
         self.n_dry_modes = n_dry_modes
         
         if modal_dry is not None:
@@ -242,9 +241,13 @@ class Model:
         if not avoid_eldef and self.eldef is None:
             self.construct_simple_eldef(node_labels=hydro.nodelabels)
         
+        if self.aero is not None:
+            self.assign_windstate(windstate)
+
         if self.hydro is not None:
             self.prepare_waveaction()
-            self.assign_seastate()
+            self.assign_seastate(seastate)
+
             if x0_wave is None:
                 x,y = self.get_all_pos()
                 x0_wave = np.array([np.mean(x), np.mean(y)])
@@ -252,8 +255,8 @@ class Model:
 
         if modal_dry is not None:        
             self.assign_dry_modes() 
-        self.use_multibody = use_multibody # use multibody if available
 
+        self.use_multibody = use_multibody # use multibody if available
         self.phases_lead = phases_lead  # define if phases lead or lag. When lags (lead=False): eta = exp(iwt-kx)
         
         if type(drag_elements) == dict:
@@ -565,18 +568,18 @@ class Model:
             pl.add_point_labels(np.vstack([wind_origin]), [f'U={self.aero.windstate.U0:.2f} m/s from heading {self.aero.windstate.direction:.1f} deg (CW)'])
             
         # Plot wave arrow        
-        if plot_wave_direction and self.seastate is not None:
-            if self.seastate.homogeneous:
+        if plot_wave_direction and self.hydro.seastate is not None:
+            if self.hydro.seastate.homogeneous:
                 if wave_origin=='center':
                     wave_origin = origin*1
                     
-                vec = rodrot(self.seastate.theta0)[0,:]*axis_scaling
+                vec = rodrot(self.hydro.seastate.theta0)[0,:]*axis_scaling
                 pl.add_arrows(np.array(wave_origin-vec*3), vec, color='black', **tmat_settings)
-                pl.add_point_labels(np.vstack([wave_origin-vec*3]), [f'dir={self.seastate.theta0*180/np.pi:.1f} deg, Hs={self.seastate.Hs:.2f} m, Tp={self.seastate.Tp:.1f} s'])
+                pl.add_point_labels(np.vstack([wave_origin-vec*3]), [f'dir={self.hydro.seastate.theta0*180/np.pi:.1f} deg, Hs={self.hydro.seastate.Hs:.2f} m, Tp={self.hydro.seastate.Tp:.1f} s'])
             else:
                 vec = []
                 pos = []
-                fun_pars = self.seastate.fun_pars
+                fun_pars = self.hydro.seastate.fun_pars
                 for pontoon in self.hydro.pontoons:
                     pars = dict(theta0=f'theta0 = {pontoon.sea_get("theta0")*180/np.pi:.1f}deg',
                                 Hs=f'Hs = {pontoon.sea_get("Hs"):.2f}m',
@@ -621,7 +624,7 @@ class Model:
 
     @property
     def theta_int(self):
-        return self.seastate.theta_int
+        return self.hydro.seastate.theta_int
 
     
     @property
@@ -904,7 +907,7 @@ class Model:
         # Excitation
         Sqq_m = 0.0
         
-        if (self.hydro is not None) and (self.seastate is not None) and ('hydro' in include_action):
+        if (self.hydro is not None) and (self.hydro.seastate is not None) and ('hydro' in include_action):
             if hasattr(self.hydro, 'Sqq_hydro') and (self.hydro.Sqq_hydro is not None):
                 Sqq_m = Sqq_m + self.hydro.Sqq_hydro(omega)
             else:
@@ -995,15 +998,15 @@ class Model:
         self.hydro.Sqq_hydro = None
         
         if seastate is None:
-            seastate = self.seastate
+            seastate = self.hydro.seastate
         else:
-            self.seastate = seastate
+            self.hydro.seastate = seastate
 
         for pontoon in self.hydro.pontoons:
             pontoon.seastate = seastate
         
         if seastate is not None:
-            self.hydro.assign_to_pontoons(**self.seastate.pontoon_options)
+            self.hydro.assign_to_pontoons(**self.hydro.seastate.pontoon_options)
 
     def prepare_waveaction(self):
         x, y = self.get_all_pos()
@@ -1039,7 +1042,7 @@ class Model:
                                                                     theta_interpolation=theta_interpolation, 
                                                                     local=self.local, x0=self.x0)
         
-        if self.seastate.short_crested:
+        if self.hydro.seastate.short_crested:
             # first and last point in trapezoidal integration has 1/2 as factor, others have 1
             # verified to match for loop over angles and trapz integration.
             dtheta = theta_int[1] - theta_int[0]
@@ -1049,7 +1052,7 @@ class Model:
         else:
             Sqq0 = Z @ Z.conj().T
         
-        if not self.seastate.options['keep_coherence']:
+        if not self.hydro.seastate.options['keep_coherence']:
             Sqq0 = block_diag(*[Sqq0[i*6:(i+1)*6, i*6:(i+1)*6] for i in range(int(Sqq0.shape[0]/6))])
 
         return self.hydro.phi.T @ Sqq0 @ self.hydro.phi
@@ -1110,7 +1113,7 @@ class Model:
             Sqq0 = self.evaluate_waveaction(omega, **kwargs)
             
         elif method=='fft':
-            if not self.seastate.homogeneous:
+            if not self.hydro.seastate.homogeneous:
                 raise ValueError('Only method standard" is supported for inhomogeneous conditions')
             # Sqq0 = transform_3dmat(waveaction_fft(self.hydro.pontoons, omega, **kwargs), self.hydro.phi)
             raise NotImplementedError('FFT not implemented yet. Will be at some point.')
