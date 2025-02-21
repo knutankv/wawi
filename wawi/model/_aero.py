@@ -139,7 +139,7 @@ WIND STATE CLASS
 class Windstate:
     def __init__(self, U0, direction, Au=0.0, Av=0.0, Aw=0.0, 
                  Iu=0.0, Iv=0.0, Iw=0.0, Cuy=0.0, Cuz=0.0, Cvy=0.0, Cvz=0.0, Cwy=0.0, Cwz=0.0, Lux=0.0, Lvx=0.0, Lwx=0.0,                
-                 x_ref=np.array([0,0,0]), scaling=None, name=None, spectrum_type='kaimal', rho=1.225):
+                 x_ref=np.array([0,0,0]), scaling=None, name=None, spectrum_type='kaimal', rho=1.225, options=None):
         
         self.U0 = U0
         self.direction = direction  # interpreted as positive in clock-wise direction and defines origin and not heading!
@@ -154,7 +154,7 @@ class Windstate:
         self.Lx = np.array([Lux, Lvx, Lwx])
         
         self.spectrum_type = spectrum_type
-
+        self.options = options
 
         if scaling is None:
             self.scaling = lambda x: 1.0    #{x} = [x,y,z]

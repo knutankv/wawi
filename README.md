@@ -54,6 +54,15 @@ seastate = Seastate(Tp, Hs, gamma, theta0, s)
 model.assign_seastate(seastate)
 ```
 
+The model is plotted by envoking this command:
+
+```python
+model.plot()
+```
+
+which gives this plot of the model and the wind and wave states:
+![Model](https://raw.githubusercontent.com/knutankv/wawi/main/docs/model.png)
+
 Then, response predictions can be run by the `run_freqsim` method or iterative modal analysis (combined system) conducted by `run_eig`:
 
 ```python
@@ -62,6 +71,15 @@ model.run_freqsim(omega)
 ```
 
 The results are stored in `model.results`, and consists of modal representation of the response (easily converted to relevant physical counterparts using built-in methods) or modal parameters of the combined system (natural frequencies, damping ratio, mode shapes). 
+
+The resulting first mode shape is plotted as follows:
+
+```python
+model.plot_mode(0)
+```
+
+This results in this plot:
+![Mode 1](https://raw.githubusercontent.com/knutankv/wawi/main/docs/mode1.png)
 
 For more details and recommendations regarding the analysis setup, it is referred to the examples provided and the code reference.
 

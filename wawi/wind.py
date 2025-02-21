@@ -564,7 +564,7 @@ def generic_kaimal_matrix(omega, nodes, T_wind, A, sigma, C, Lx, U, spectrum_typ
         xyz[node_ix,:] = (T_wind @ node.coordinates).T #Transform node coordinates to the wind coordinate system
         V[node_ix] = U(node.coordinates) # Mean wind velocity in the nodes
 
-        if 'karman' in spectrum_type.lower()
+        if 'karman' in spectrum_type.lower():
             Su[node_ix,:], Sv[node_ix,:], Sw[node_ix,:] = von_karman_auto(omega, Lx, sigma, V[node_ix]) 
         elif spectrum_type.lower() == 'kaimal':
             Su[node_ix,:], Sv[node_ix,:], Sw[node_ix,:] = kaimal_auto(omega, Lx, A, sigma, V[node_ix]) # One point spectra for u component in all nodes
