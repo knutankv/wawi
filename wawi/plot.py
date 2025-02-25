@@ -9,9 +9,9 @@ from scipy.interpolate import RectBivariateSpline, interp1d
 
 def plot_ads(ad_dict, v, terms='stiffness', num=None, test_v=dict(), test_ad=dict(), zasso_type=False, ranges=None):
     # v: v or K
-    if terms is 'stiffness':
+    if terms == 'stiffness':
         terms = [['P4', 'P6', 'P3'], ['H6', 'H4', 'H3'], ['A6', 'A4', 'A3']]
-    elif terms is 'damping':
+    elif terms == 'damping':
         terms = [['P1', 'P5', 'P2'], ['H5', 'H1', 'H2'], ['A5', 'A1', 'A2']]
 
     # Create exponent defs for K_normalized plotting
@@ -60,9 +60,9 @@ def plot_ads(ad_dict, v, terms='stiffness', num=None, test_v=dict(), test_ad=dic
     
     for col_ix in range(len(terms)):
         if zasso_type:
-            ax[-1, col_ix].set_xlabel('$K$')
+            ax[-1, col_ix].set_xlabel(r'$K$')
         else:
-            ax[-1, col_ix].set_xlabel('$V/(B\cdot \omega)$')
+            ax[-1, col_ix].set_xlabel(r'$V/(B\cdot \omega)$')
     
     fig.tight_layout()
     return fig, ax
@@ -98,7 +98,7 @@ def plot_dir_and_crests(theta0, Tp, arrow_length=100, origin=np.array([0,0]),
     wave_length = 2*np.pi/get_kappa(2*np.pi/Tp, U=0.0)
 
     plt.arrow(origin[0],origin[1], arrow_length*v[0], arrow_length*v[1], **arr_opts)
-    plt.text(origin[0], origin[1], f'$\\theta_0$ = {theta0}$^o$\n $T_p$={Tp} s\n $\lambda=${wave_length:.0f} m')
+    plt.text(origin[0], origin[1], f'$\\theta_0$ = {theta0}$^o$\n $T_p$={Tp} s\n $\\lambda=${wave_length:.0f} m')
 
     dv = v*wave_length
     for n in range(n_repeats):
@@ -317,7 +317,10 @@ def _set_axes_radius(ax, origin, radius):
     ax.set_ylim3d([y - radius, y + radius])
     ax.set_zlim3d([z - radius, z + radius])
 
-def equal_3d(ax=plt.gca()):
+def equal_3d(ax=None):
+    if ax is None:
+        ax = plt.gca()
+
     x_lims = np.array(ax.get_xlim())
     y_lims = np.array(ax.get_ylim())
     z_lims = np.array(ax.get_zlim())

@@ -355,25 +355,25 @@ def import_wadam_hydro_transfer(wadam_file):
         6-by-len(theta)-by-len(omega)
     '''
 
-    string = ('.+W A V E  P E R I O D.+=\s+(?P<period>.+):.+\n.+'
-              'H E A D I N G   A N G L E.+=\s+(?P<theta>.+):(?:.*\n){5,10}'
+    string = (r'.+W A V E  P E R I O D.+=\s+(?P<period>.+):.+\n.+'
+              r'H E A D I N G   A N G L E.+=\s+(?P<theta>.+):(?:.*\n){5,10}'
               
-              '.+EXCITING FORCES AND MOMENTS FROM THE HASKIN RELATIONS(?:.*\n){4,6}\s+'
+              r'.+EXCITING FORCES AND MOMENTS FROM THE HASKIN RELATIONS(?:.*\n){4,6}\s+'
               
-              '-F1-\s+(?P<F1_real>[-?.E\d+]+)\s+(?P<F1_imag>[-?.E\d+]+)\s.+\n\s+'
-              '-F2-\s+(?P<F2_real>[-?.E\d+]+)\s+(?P<F2_imag>[-?.E\d+]+)\s.+\n\s+'
-              '-F3-\s+(?P<F3_real>[-?.E\d+]+)\s+(?P<F3_imag>[-?.E\d+]+)\s.+\n\s+'
-              '-F4-\s+(?P<F4_real>[-?.E\d+]+)\s+(?P<F4_imag>[-?.E\d+]+)\s.+\n\s+'
-              '-F5-\s+(?P<F5_real>[-?.E\d+]+)\s+(?P<F5_imag>[-?.E\d+]+)\s.+\n\s+'
-              '-F6-\s+(?P<F6_real>[-?.E\d+]+)\s+(?P<F6_imag>[-?.E\d+]+)\s.+\n')
+              r'-F1-\s+(?P<F1_real>[-?.E\d+]+)\s+(?P<F1_imag>[-?.E\d+]+)\s.+\n\s+'
+              r'-F2-\s+(?P<F2_real>[-?.E\d+]+)\s+(?P<F2_imag>[-?.E\d+]+)\s.+\n\s+'
+              r'-F3-\s+(?P<F3_real>[-?.E\d+]+)\s+(?P<F3_imag>[-?.E\d+]+)\s.+\n\s+'
+              r'-F4-\s+(?P<F4_real>[-?.E\d+]+)\s+(?P<F4_imag>[-?.E\d+]+)\s.+\n\s+'
+              r'-F5-\s+(?P<F5_real>[-?.E\d+]+)\s+(?P<F5_imag>[-?.E\d+]+)\s.+\n\s+'
+              r'-F6-\s+(?P<F6_real>[-?.E\d+]+)\s+(?P<F6_imag>[-?.E\d+]+)\s.+\n')
     regex = re.compile(string) 
     
-    nondim_string = ('\s+NON-DIMENSIONALIZING FACTORS:\n(?:.*\n)+'
-                     '\s+RO\s+=\s+(?P<rho>[-?.E\d+]+)\n'
-                     '\s+G\s+=\s+(?P<g>[-?.E\d+]+)\n'
-                     '\s+VOL\s+=\s+(?P<vol>[-?.E\d+]+)\n'
-                     '\s+L\s+=\s+(?P<l>[-?.E\d+]+)\n'
-                     '\s+WA\s+=\s+(?P<wa>[-?.E\d+]+)')
+    nondim_string = (r'\s+NON-DIMENSIONALIZING FACTORS:\n(?:.*\n)+'
+                     r'\s+RO\s+=\s+(?P<rho>[-?.E\d+]+)\n'
+                     r'\s+G\s+=\s+(?P<g>[-?.E\d+]+)\n'
+                     r'\s+VOL\s+=\s+(?P<vol>[-?.E\d+]+)\n'
+                     r'\s+L\s+=\s+(?P<l>[-?.E\d+]+)\n'
+                     r'\s+WA\s+=\s+(?P<wa>[-?.E\d+]+)')
     
     regex_nondim = re.compile(nondim_string) 
     
