@@ -27,9 +27,6 @@ dependencies = ["plotly", "pandas", "numpy", "pyvista[jupyter]>=0.38.1",
                       "beefpy"]
 
 
-[tool.setuptools]
-packages = ["wawi"]
-
 [tool.setuptools.dynamic]
 version = {attr = "wawi.__version__"}
 
