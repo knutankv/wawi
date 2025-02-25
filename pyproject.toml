@@ -33,9 +33,8 @@ packages = ["wawi"]
 [tool.setuptools.dynamic]
 version = {attr = "wawi.__version__"}
 
-[tool.setuptools.packages.find]
-where = ["wawi"]
-namespaces = false
+[tool.setuptools.packages]
+find = {}
 
 [project.urls]
 repository = "https://github.com/knutankv/wawi"
