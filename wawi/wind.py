@@ -6,7 +6,7 @@ from scipy.special import jv as besselj, yv as bessely
 from .general import rodrot, blkdiag
 from .plot import plot_ads
 
-conv_text=''' 
+conv_text = r''' 
 -----------------------------------------------------
 |                                                   |
 | ~ ~ ~~~ ~  ~~ ~ /^^^^^^^^^^^^\ 88ooo...  .  .  .  |
