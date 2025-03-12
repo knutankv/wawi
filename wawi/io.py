@@ -336,7 +336,7 @@ def load_model(model_path, save_if_nonexistent=False, sort_nodes_by_x=True):
 
 def import_wadam_hydro_transfer(wadam_file):
     '''
-    Import WADAM output file.
+    Import WADAM LIS output file.
 
     Parameters
     -----------

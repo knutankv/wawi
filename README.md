@@ -87,6 +87,13 @@ Examples
 =======================
 Examples are provided as Jupyter Notebooks in the [examples folder](https://github.com/knutankv/wawi/tree/main/examples).
 
+The examples are structured in the following folders based on their topic:
+
+* **0 Model generation and setup** - *Describing how a model is defined, either using input files together with the function `wawi.io.import_folder` or using the classes available in the `wawi.model` module directly (in the latter case, the open source Python library BEEF is used to create the required parameters directly in the notebook).*
+* **1 Modal analysis** - *Describing how to set up iterative (and incremental) modal analyses to represent the contributions from aerodynamics and hydrodynamices. Also, an example showing how to set up a multi-modal flutter analysis is given.*
+* **2 Response prediction** - *Describing how to conduct response analyses using WAWI. This includes assigning wind states, sea states, and the necessary commands to run a frequency domain analysis. Furthermore, more advanced topics such as wave-current interaction, inhomogeneous waves and stochastic linearization to represent quadratic drag damping are given in separate examples. Three models are considered: (i) a simple curved floating bridge, (ii) a single beam, (iii) a suspension bridge.*
+* **3 Software interfacing** - *Describing how to export necessary data from other software (limited to Abaqus for now) to construct a WAWI model.*
+
 References
 =======================
 
