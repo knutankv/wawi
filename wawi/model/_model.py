@@ -673,6 +673,8 @@ class Model:
         return phi_tot
 
     def get_result_psd(self, key='hydro', index=None, convert_to=None, modes=None):
+        # index: applied after transformation to requested csys (convert_to)
+
         ix, ix_3d = self.get_mode_ix(modes)            
 
         if key is not None:    

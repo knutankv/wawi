@@ -52,6 +52,51 @@ def simulate_mdof(S, omega, fs=None, tmax=None, reg_factor=None, zero_limit=1e-1
                   phase_angles=None, return_phase_angles=False, interpolation_kind='linear', 
                   component_scaling=None, print_status=False):
     
+    '''
+    Simulate time series from given cross-spectral density matrix.
+
+    Parameters
+    ----------------
+    S : float
+        cross-spectral density matrix (Ndofs x Ndofs x Nfreqs) as complex numpy array
+    omega : float
+        numpy array defining frequencies in rad/s
+    fs : float, optional
+        sampling frequency in Hz; if not given, the value is defined as two times the maximum of `omega`
+    tmax : float, optional
+        duration of realization in seconds
+    reg_factor : float, optional
+        to help the Cholesky decomposition to achieve a numerical solution, 
+        a diagonal matrix with the norm of all frequency components of the matrix S scaled by the given factor
+        - if no value is given (--> None imposed), no regularization is conducted; 
+        used as input to function `spectrum_to_process` which decomposes the spectral density 
+    zero_limit : float, optional
+        frequency components where the norm of S is below this limit is set to zero
+        if no value is given (--> None imposed), no zero limit is applied; 
+        used as input to function `spectrum_to_process` which decomposes the spectral density 
+    phase_angles : float, optional
+        if previously conducted simulations are to be recreated, they can by inputting the phase angles
+        (to get the phase angles from simulation, see `return_phase_angles` input parameter)
+    return_phase_angles : bool, default=False
+        whether or not to return phase angle enabling recreation of the simulation
+    interpolation_kind : optional, default='linear'
+        interpolation type used for interpolation (to ensure that we get defined duration and sampling) prior to ifft
+    component_scaling : float, optional
+        values to use for scaling of components prior to decomposition (and thereafter rescale afterwards);
+        can help if some components are much smaller than others; size should match number of DOFs in S
+    print_status : False, optional
+        whether or not to print status messages
+
+    Returns
+    ----------------
+    p : float
+        time history 
+    t : float
+        numpy array with time axis values corresponding to `p`
+    alpha : float
+        phase angles, only returned if `return_phase_angles` is True
+    '''
+    
     if omega[0] !=0:
         omega = np.insert(omega, 0, 0)
         S = np.dstack([0*S[:,:,0], S])
