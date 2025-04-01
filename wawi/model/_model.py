@@ -1324,3 +1324,15 @@ class Model:
             return frf
         else:
             return imp
+        
+    def get_node_ix(self, nodelabel):
+        ix = np.where(self.eldef.get_node_labels()==nodelabel)[0]
+        if len(ix)>0:
+            ix = int(ix[0])
+        else:
+            ix = None
+
+        return ix
+    
+    def get_node_ixs(self, nodelabels):
+        return [self.get_node_ix(nodelabel) for nodelabel in nodelabels]
