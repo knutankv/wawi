@@ -42,24 +42,28 @@ with open('element.json', 'w') as f:
 phi_full_disp = wawi.ext.abq.get_nodal_phi(step_obj, nodes, flatten_components=True, field_outputs=['UT', 'UR'])
 
 #%% Get pontoon data
-node_matrix_pontoons = wawi.ext.abq.get_element_matrices(region_hydro, obj=part)
-node_labels_pontoons = node_matrix_pontoons[:,0]
-nodes_pontoons = wawi.ext.abq.create_list_of_nodes(part, node_labels_pontoons)
-phi_h = wawi.ext.abq.get_nodal_phi(step_obj, nodes_pontoons, flatten_components=True, field_outputs=['UT', 'UR'])
-
-# Export pontoon.json
-pontoon_types = ['ptype_1']*7   
-rotations = -np.array([13.944407004001892, 9.2962713360012632, 4.6481356680006325, 0.0,
+pontoon_sets = ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7']
+pontoon_types = ['p17', 'p26', 'p345', 'p345', 'p345', 'p26', 'p17']
+rotations = np.array([13.944407004001892, 9.2962713360012632, 4.6481356680006325, 0.0,
                      -4.6481356680006334, -9.2962713360012632, -13.944407004001883])
 
+node_matrix_pontoons = np.vstack([wawi.ext.abq.get_element_matrices(db.rootAssembly.nodeSets[pset], obj=part) for pset in pontoon_sets])
+node_labels_pontoons = node_matrix_pontoons[:,0]
+
+# Export pontoon.json
 pontoon_data = OrderedDict()
 
 for ix, node in enumerate(node_labels_pontoons):
-    key = 'P'+str (ix+1)
+    key = pontoon_sets[ix]
     pontoon_data[key] = dict(coordinates=node_matrix_pontoons[ix, 1:].tolist(),
                             node=node,
                             rotation=rotations[ix],
                             pontoon_type=pontoon_types[ix])
+
+
+nodes_pontoons = wawi.ext.abq.create_list_of_nodes(part, node_labels_pontoons)
+phi_h = wawi.ext.abq.get_nodal_phi(step_obj, nodes_pontoons, flatten_components=True, field_outputs=['UT', 'UR'])
+
 
 with open('pontoon.json', 'w') as f:
     json.dump(pontoon_data, f)
