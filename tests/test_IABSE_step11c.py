@@ -5,9 +5,9 @@ from math import isclose
 import dill
 
 # use the local wawi (Github folder) instead of the installed version (remove this when using the installed version)
-import sys
-import os
-sys.path.insert(0, os.path.abspath('C:\\Users\\aksef\\Documents\\GitHub\\wawi'))
+#import sys
+#import os
+#sys.path.insert(0, os.path.abspath('C:\\Users\\aksef\\Documents\\GitHub\\wawi'))
 
 # import functions
 from wawi.io import import_folder
@@ -166,11 +166,11 @@ def test_mean_speed_45():
     omega = np.array([0.001, f])*np.pi*2
     HH = eval_3d_fun(model.get_frf_fun(opt = 1), omega)
 
-    model.aero.sections['girder0'].Admittance = lambda fred: np.full((4, 3), davenport(fred))
+    model.aero.sections['girder0'].admittance = lambda fred: np.full((4, 3), davenport(fred))
     model.run_freqsim(omega,
                     include_selfexcited=['aero'], 
                     include_action=['aero'],
-                    print_progress=False, merge_aero_sections=True)
+                    print_progress=False)
 
     global_dof_ix = np.array([1,2,3])
     S = model.get_result_psd(key='full', 
@@ -225,13 +225,13 @@ def test_response_spectra(Vbuff, RS_horz_exp, RS_vert_exp, RS_tors_exp):
         AD_funs = dill.load(file)
     AD_s = AD_dict(AD_funs)
     model.aero.sections['girder0'].ADs = ADs(**AD_s)
-    model.aero.sections['girder0'].Admittance = lambda fred: np.full((4, 3), davenport(fred))
+    model.aero.sections['girder0'].admittance = lambda fred: np.full((4, 3), davenport(fred))
 
     # run analysis
     model.run_freqsim(omega_axis,
                       include_selfexcited=['aero'], 
                       include_action=['aero'],
-                      print_progress=False, merge_aero_sections=True)
+                      print_progress=False)
     
     # extract PSD
     global_dof_ix = np.array([1,2,3])
@@ -265,13 +265,13 @@ def test_RMS_response(Vbuff, RMS_horz_exp, RMS_vert_exp, RMS_tors_exp):
         AD_funs = dill.load(file)
     AD_s = AD_dict(AD_funs)
     model.aero.sections['girder0'].ADs = ADs(**AD_s)
-    model.aero.sections['girder0'].Admittance = lambda fred: np.full((4, 3), davenport(fred))
+    model.aero.sections['girder0'].admittance = lambda fred: np.full((4, 3), davenport(fred))
     
     # run analysis
     model.run_freqsim(omega_axis,
                     include_selfexcited=['aero'], 
                     include_action=['aero'],
-                    print_progress=False, merge_aero_sections=True)
+                    print_progress=False)
     
     # RMS responses
     stds = model.get_result_std(key = 'full')

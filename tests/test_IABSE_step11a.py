@@ -3,10 +3,10 @@ import pytest
 import numpy as np
 from math import isclose
 
-# use the local wawi (Github folder) instead of the installed version (remove this when using the installed version)
-import sys
-import os
-sys.path.insert(0, os.path.abspath('C:\\Users\\aksef\\Documents\\GitHub\\wawi'))
+# use the local wawi 
+#import sys
+#import os
+#sys.path.insert(0, r'C:\Users\aksef\OneDrive - Multiconsult\project\wawi\wawi_keep')
 
 # import functions
 from wawi.io import import_folder
@@ -108,7 +108,6 @@ def test_mean_speed_45():
     # PSD response
     S_exp = np.transpose(np.array( [ [0.0167, -0.007j], [0.007j, 0.00293] ] ))
 
-
     model = import_folder(model_folder)
     model.aero.windstate = iabse_11a_windstate(V)
 
@@ -121,11 +120,11 @@ def test_mean_speed_45():
     omega = np.array([0.001, f])*np.pi*2
     HH = eval_3d_fun(model.get_frf_fun(opt = 1), omega)
 
-    model.aero.sections['girder0'].Admittance = lambda fred: np.full((4, 3), davenport(fred))
+    model.aero.sections['girder0'].admittance = lambda fred: np.full((4, 3), davenport(fred))
     model.run_freqsim(omega,
                     include_selfexcited=['aero'], 
                     include_action=['aero'],
-                    print_progress=False, merge_aero_sections=True)
+                    print_progress=False)
 
     global_dof_ix = np.array([2,3])
     S = model.get_result_psd(key='full', 
@@ -170,12 +169,14 @@ def test_response_spectra(Vbuff, RS_vert_exp, RS_tors_exp):
     model.aero.windstate = iabse_11a_windstate(Vbuff)
     model.modal_dry.xi0 = .3e-2
     model.aero.sections['girder0'].ADs = ADs(**flatplate_ads())
-    model.aero.sections['girder0'].Admittance = lambda fred: np.full((4, 3), davenport(fred))
+    model.aero.sections['girder0'].admittance = lambda fred: np.full((4, 3), davenport(fred))
     
     model.run_freqsim(omega_axis,
                     include_selfexcited=['aero'], 
                     include_action=['aero'],
-                    print_progress=False, merge_aero_sections=True)
+                    print_progress=False, 
+                    #merge_aero_sections=True
+                    )
 
     global_dof_ix = np.array([2,3])
     S = model.get_result_psd(key='full', 
@@ -204,12 +205,12 @@ def test_RMS_response(Vbuff, RMS_vert_exp, RMS_tors_exp):
     model.aero.windstate = iabse_11a_windstate(Vbuff)
     model.modal_dry.xi0 = .3e-2
     model.aero.sections['girder0'].ADs = ADs(**flatplate_ads())
-    model.aero.sections['girder0'].Admittance = lambda fred: np.full((4, 3), davenport(fred))
+    model.aero.sections['girder0'].admittance = lambda fred: np.full((4, 3), davenport(fred))
 
     model.run_freqsim(omega_axis,
                     include_selfexcited=['aero'], 
                     include_action=['aero'],
-                    print_progress=False, merge_aero_sections=True)
+                    print_progress=False)
     
     stds = model.get_result_std(key = 'full')
 

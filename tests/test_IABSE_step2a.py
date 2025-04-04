@@ -4,9 +4,9 @@ from math import isclose
 import dill
 
 # use the local wawi (Github folder) instead of the installed version (remove this when using the installed version)
-import sys
-import os
-sys.path.insert(0, os.path.abspath('C:\\Users\\aksef\\Documents\\GitHub\\wawi'))
+#import sys
+#import os
+#sys.path.insert(0, os.path.abspath('C:\\Users\\aksef\\Documents\\GitHub\\wawi'))
 
 from wawi.io import import_folder
 from wawi.model import Windstate
@@ -184,14 +184,14 @@ def test_RS_spectra():
     model.aero.windstate = iabse_2a_windstate(V)
     # admittance
     for key in model.aero.sections:
-        model.aero.sections[key].Admittance = lambda fred: np.full((4, 3), davenport(fred))
+        model.aero.sections[key].admittance = lambda fred: np.full((4, 3), davenport(fred))
 
     # run analysis
     model.run_freqsim(omega,
                         include_selfexcited=['aero'], 
                         include_action=['aero'],
-                        print_progress=False, merge_aero_sections=True,
-                                            ensure_at_peaks=False) # keep the given frequency axis
+                        print_progress=False,
+                        ensure_at_peaks=False) # keep the given frequency axis
 
 
     # extract PSD - at the midpsan
@@ -237,7 +237,7 @@ def test_RMS_response(Vbuff, RMS_horz_exp1, RMS_vert_exp1, RMS_tors_exp1, RMS_ho
     model.aero.windstate = iabse_2a_windstate(Vbuff)
     # admittance
     for key in model.aero.sections:
-        model.aero.sections[key].Admittance = lambda fred: np.full((4, 3), davenport(fred))
+        model.aero.sections[key].admittance = lambda fred: np.full((4, 3), davenport(fred))
 
     #model.run_eig(w_initial=model.modal_dry.omega_n.tolist(), freq_kind=True, itmax=100) # alters integration 
 
@@ -245,7 +245,7 @@ def test_RMS_response(Vbuff, RMS_horz_exp1, RMS_vert_exp1, RMS_tors_exp1, RMS_ho
     model.run_freqsim(omega,
                         include_selfexcited=['aero'], 
                         include_action=['aero'],
-                        print_progress=False, merge_aero_sections=True) 
+                        print_progress=False) 
     # RMS responses
     stds = model.get_result_std(key = 'full')
     # global dofs
