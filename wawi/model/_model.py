@@ -16,6 +16,8 @@ from wawi.structural import freqsim
 from wawi.tools import print_progress as pp
 from wawi.wave import stochastic_linearize, waveaction_fft, harmonic_linearize
 from wawi.wind import windaction, windaction_static
+# from wawi.io import import_folder
+
 import dill
 
 
@@ -265,6 +267,17 @@ class Model:
             self.drag_elements = drag_elements
             
         self.Cquad_lin = 0.0
+    
+    # Not used due to circular referencing.
+    # @staticmethod
+    # def from_folder(*args, **kwargs):
+    #     '''
+    #     Alternative constructor. Passes all inputs to `wawi.io.import_folder`.
+    #     '''
+
+    #     model = import_folder(*args, **kwargs)
+        
+    #     return model
     
 
     @staticmethod    #alternative constructor
@@ -568,7 +581,7 @@ class Model:
             pl.add_point_labels(np.vstack([wind_origin]), [f'U={self.aero.windstate.U0:.2f} m/s from heading {self.aero.windstate.direction:.1f} deg (CW)'])
             
         # Plot wave arrow        
-        if plot_wave_direction and self.hydro.seastate is not None:
+        if plot_wave_direction and self.hydro is not None and self.hydro.seastate is not None:
             if self.hydro.seastate.homogeneous:
                 if wave_origin=='center':
                     wave_origin = origin*1
@@ -1336,3 +1349,9 @@ class Model:
     
     def get_node_ixs(self, nodelabels):
         return [self.get_node_ix(nodelabel) for nodelabel in nodelabels]
+    
+    def get_aerosection_phi_and_x(self, key):
+        ixs = self.aero.phi_ixs[key]
+        x = np.vstack([node.coordinates for node in self.aero.eldef[key].nodes])
+
+        return ixs, x

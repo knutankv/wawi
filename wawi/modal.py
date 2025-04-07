@@ -192,7 +192,7 @@ def iteig(K, C, M, omega=None, omega_ref=0, input_functions=True, itmax=None, to
         q[:, m] = phi[:,0]
 
         if print_progress:
-            pp(m+2,2*ndofs, sym='>', postfix=' finished with iterative modal analysis.')
+            pp(m+2,2*ndofs+1, sym='>', postfix=' finished with iterative modal analysis.')
 
     if print_progress:
         print(' ')
@@ -323,7 +323,7 @@ def iteig_freq(K, C, M, omega=None, itmax=15, reference_omega=0, input_functions
         q[:, m] = qi[:, m] 
 
         if print_progress:
-            pp(m+2,2*ndofs, sym='>', postfix=' finished with iterative modal analysis.')
+            pp(m+2 ,2*ndofs+1, sym='>', postfix=' finished with iterative modal analysis.')
 
     if print_progress:
         print(' ')
