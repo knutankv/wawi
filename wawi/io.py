@@ -39,7 +39,7 @@ def import_folder(model_folder, pontoon_stl='pontoon.stl', aero_sections='aero_s
     sort_nodes_by_x : True, optional
         whether or not to sort the nodes of eldef by their x-coordinate
     interpolation_kind : {'quadratic', 'linear', ...}
-        interpolation kind used for hydrodynamic transfer function 
+        interpolation kind used for hydrodynamic transfer function and hydrodynamic system matrices
 
     Returns
     ---------------

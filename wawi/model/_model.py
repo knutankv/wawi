@@ -1043,7 +1043,7 @@ class Model:
     
        
     def get_waveaction(self, omega_k, max_rel_error=0.01, 
-                       theta_interpolation='linear', theta_int=None):
+                       theta_interpolation='linear', theta_int=None, transform_by_phi=True):
         
         if theta_int is None and self.theta_int is None:
             theta_int = self.get_theta_int(omega_k, max_rel_error=max_rel_error)
@@ -1069,8 +1069,11 @@ class Model:
         
         if not self.hydro.seastate.options['keep_coherence']:
             Sqq0 = block_diag(*[Sqq0[i*6:(i+1)*6, i*6:(i+1)*6] for i in range(int(Sqq0.shape[0]/6))])
-
-        return self.hydro.phi.T @ Sqq0 @ self.hydro.phi
+        
+        if transform_by_phi:
+            return self.hydro.phi.T @ Sqq0 @ self.hydro.phi
+        else:
+            return Sqq0
 
     
     def evaluate_windaction(self, omega=None, aero_sections=None, print_progress=True, static=False, **kwargs):
@@ -1144,15 +1147,20 @@ class Model:
 
 
     def evaluate_waveaction(self, omega, max_rel_error=0.01, print_progress=True, theta_int=None,
-                            theta_interpolation='quadratic', **kwargs):
+                            theta_interpolation='quadratic', transform_by_phi=True, **kwargs):
         
         if theta_int is None:
             theta_int = self.theta_int
 
-        ndofs = self.hydro.phi.shape[1]
+        if transform_by_phi:
+            ndofs = self.hydro.phi.shape[1]
+        else:
+            ndofs = self.hydro.phi.shape[0]
+        
         Sqq = np.zeros([ndofs, ndofs, len(omega)]).astype('complex')
+
         for k, omega_k in enumerate(omega):
-            Sqq[:,:,k] = self.get_waveaction(omega_k, max_rel_error=max_rel_error, theta_int=theta_int,
+            Sqq[:,:,k] = self.get_waveaction(omega_k, max_rel_error=max_rel_error, theta_int=theta_int, transform_by_phi=transform_by_phi,
                                              theta_interpolation=theta_interpolation, **kwargs)
             
             if print_progress:

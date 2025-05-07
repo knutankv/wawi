@@ -480,7 +480,7 @@ SEASTATE CLASS
 '''
 
 class Seastate:
-    def __init__(self, Tp, Hs, gamma, theta0, s, depth=None, origin=None, ranges=None, 
+    def __init__(self, Tp, Hs, gamma, theta0, s=np.inf, depth=None, origin=None, ranges=None, 
                  options={}, pontoon_options={}, name=None, plot_label=None, centered_dirdist=True,
                  U=None, thetaU=None, use_robust_D=True, angle_unit='deg'):
 
@@ -529,7 +529,7 @@ class Seastate:
 
         self.x0 = self.origin[0]
         self.y0 = self.origin[1]    
-        self.options = {'keep_coherence': True}
+        self.options = {'keep_coherence': True}     #default options
         self.options.update(**options)       
         
         self.pontoon_options = {'current_affects_Q': True, 'current_affects_k': True}
@@ -821,7 +821,7 @@ class PontoonType:
     
             
     @classmethod
-    def from_numeric(cls, interpolation_kind='linear', A=None, M0=None, B=None, Kh=None, 
+    def from_numeric(cls, interpolation_kind='linear', fill_value_added='extrapolate', A=None, M0=None, B=None, Kh=None, 
                      omega=None, Q=None, theta=None, omegaQ=None, **kwargs):
         
         if omegaQ is None:
@@ -834,12 +834,12 @@ class PontoonType:
                 A = np.zeros([M0.shape + [len(omega)]])
             elif M0 is None:
                 M0 = A[:,:,0]*0
-            M = interp1d(omega, (A.T+M0.T).T, axis=2, fill_value='extrapolate', kind=interpolation_kind)
+            M = interp1d(omega, (A.T+M0.T).T, axis=2, fill_value=fill_value_added, kind=interpolation_kind)
         
         if B is None:
             C = None
         else:
-            C = interp1d(omega, B, axis=2, fill_value='extrapolate', kind=interpolation_kind)
+            C = interp1d(omega, B, axis=2, fill_value=fill_value_added, kind=interpolation_kind)
         
         if Kh is not None:
             K = lambda omega: Kh
@@ -853,7 +853,7 @@ class PontoonType:
 
 
     @classmethod
-    def from_wadam(cls, path, interpolation_kind='linear', 
+    def from_wadam(cls, path, interpolation_kind='linear', fill_value_added='extrapolate',
                    include=['added mass', 'added damping', 'restoring stiffness', 'inertia'], **kwargs):
         
         from wawi.io import import_wadam_mat, import_wadam_hydro_transfer
@@ -873,10 +873,10 @@ class PontoonType:
         if 'inertia' not in include:
             M0 = M0*0
             
-        M = interp1d(omega, (A.T+M0.T).T, axis=2, fill_value='extrapolate', kind=interpolation_kind)
-        C = interp1d(omega, B, axis=2, fill_value='extrapolate', kind=interpolation_kind)
+        M = interp1d(omega, (A.T+M0.T).T, axis=2, fill_value=fill_value_added, kind=interpolation_kind)
+        C = interp1d(omega, B, axis=2, fill_value=fill_value_added, kind=interpolation_kind)
         K = lambda omega: Kh
         
-        Q = interp1d(omega_Q, Q, fill_value='extrapolate', kind=interpolation_kind, axis=2)
+        Q = interp1d(omega_Q, Q, fill_value=0.0, kind=interpolation_kind, axis=2)
         
         return cls(M=M, C=C, K=K, Q=Q, original_omega=omega, theta=theta, **kwargs)

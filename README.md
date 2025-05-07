@@ -1,7 +1,7 @@
 ![WAWI logo](https://raw.githubusercontent.com/knutankv/wawi/main/wawi-logo-animated.svg)
 =======================
 
-What is wawi?
+What is WAWI?
 =======================
 WAWI is a Python toolbox for prediction of response of structures exposed to wind and wave excitation. The package is still under development in its alpha stage, and documentation and testing will be completed along the way.
 
@@ -20,6 +20,11 @@ or install directly from github:
 pip install git+https://www.github.com/knutankv/wawi.git@main
 ```
 
+
+How does WAWI work?
+======================
+By representing both aerodynamic and hydrodynamic motion-induced forces and excitation using a coordinate basis defined by the dry in-vacuum mode shapes of the structure, WAWI is able to versatily predict response based on input from any commercial FE software. The main structure used for response prediction is given in this figure:
+![Model](https://raw.githubusercontent.com/knutankv/wawi/main/docs/flowchart.png)
 
 Quick start
 =======================

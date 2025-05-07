@@ -155,6 +155,7 @@ def iteig(K, C, M, omega=None, omega_ref=0, input_functions=True, itmax=None, to
                 lambdai = lambdai[m]
 
             w = abs(np.imag(lambdai))
+
             if mean_w:
                 w = (wprev+w)/2
             
