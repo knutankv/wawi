@@ -1,0 +1,26 @@
+{
+    "S":
+        {
+            "Hs": "2.1",
+            "Tp": "8.3",
+            "gamma": "8"
+        },
+
+    "D": {
+        "s": "12",
+        "theta0": "90.0"
+    },
+
+    "current":
+    {
+        "U":"1.0",
+        "thetaU":"80.0"
+
+    },
+
+    "options":
+        {"truncate_theta":[-0.6, 0.6],
+        "dtheta": 0.05,
+        "keep_coherence": true}
+    
+}
