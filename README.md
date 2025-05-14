@@ -3,7 +3,28 @@
 
 What is WAWI?
 =======================
-WAWI is a Python toolbox for prediction of response of structures exposed to wind and wave excitation. The package is still under development in its alpha stage, and documentation and testing will be completed along the way.
+WAWI is a Python toolbox for prediction of response of structures exposed to wind and wave excitation, using a multimodal frequency-domain approach. It supports special features such as:
+
+* Hydrodynamic added mass, radiation damping and hydrodynamic force transfer function from e.g. WAMIT analysis
+* Quasisteady wind forcing for buffeting analysis
+* Combined effects of wind and waves
+* Iterative multimodal flutter
+* Iterative modal analysis
+* Modelling of motion-induced aerodynamic forces using aerodynamic derivatives
+* Inhomogeneous sea states
+* Inhomogeneous mean wind (other parameters planned for)
+* Current effects on wave excitation
+* Stochastic linearization methodology to support linearized effect of quadratic drag damping (both line elements and pontoon objects)
+* Object-oriented model setup, including FE description (using Python package BEEF) of beams exposed to aerodynamic forcing
+
+Planned implemented in the near future:
+
+* Fully inhomogeneous wind state definition (all wind field parameters)
+* Hydrodynamic interaction effects from multibody analyses
+* Second-order wave excitation effects
+* Definition of ADs (aerodynamic derivatives) using rational functions
+
+The package is still under development in its alpha stage, and documentation and testing will be completed along the way.
 
 
 Installation 
@@ -101,6 +122,13 @@ The examples are structured in the following folders based on their topic:
 
 References
 =======================
+The following papers provide background for the implementation:
+
+* Beam (FE) description of aerodynamic forces: [Øiseth et al. (2012)](https://www.sciencedirect.com/science/article/abs/pii/S0168874X11001880)
+* Wave modelling and response prediction: [Kvåle et al. (2016)](https://www.sciencedirect.com/science/article/abs/pii/S004579491500334X)
+* Inhomogeneous wave modelling: [Kvåle et al. (2024)](https://www.sciencedirect.com/science/article/pii/S0141118723003437)
+* Hydrodynamic interaction effects: [Fenerci et al. (2022)](https://www.sciencedirect.com/science/article/pii/S095183392200017X)
+
 
 Citation
 =======================
