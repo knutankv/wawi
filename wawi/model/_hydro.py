@@ -616,9 +616,12 @@ thetaU (current)={self.thetaU*180/np.pi:.1f}deg
         if return_phases:
             eta, t, phase = output
             return eta, t, phase
-        else:
+        elif time_history:
             eta, t = output
             return eta, t
+        else:
+            return output
+
             
 
     @staticmethod

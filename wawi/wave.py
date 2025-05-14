@@ -120,7 +120,6 @@ def xsim(x, y, S, D, omega, fs=None, theta=None, n_theta=40, grid_mode=True, pri
     if theta is None:
         theta = np.linspace(-np.pi, np.pi, n_theta)
     
-    
     if not isfunction(S):
         Sfun = lambda x, y: S
     else:

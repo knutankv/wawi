@@ -1,0 +1,19 @@
+{
+    "S":
+        {
+            "Hs": "lambda x: 2.1 - 0.5*x/1500",
+            "Tp": "lambda x,y: 8.3 + 0.1*x/1500 + 0.1*y/100",
+            "gamma": "8"
+        },
+
+    "D": {
+        "s": "12",
+        "theta0": "lambda x: 90.0 - 10.0*x/1500"
+    },
+
+    "options": {
+        "centered_dirdist": false
+
+    }
+    
+}
