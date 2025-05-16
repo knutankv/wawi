@@ -3,7 +3,7 @@
 '''
 __pdoc__ = {'wawi.ext.abq': False}
 
-__version__ = "0.0.14"
+__version__ = "0.0.15"
 
 # Other packages
 import numpy as np

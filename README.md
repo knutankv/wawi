@@ -45,7 +45,17 @@ pip install git+https://www.github.com/knutankv/wawi.git@main
 How does WAWI work?
 ======================
 By representing both aerodynamic and hydrodynamic motion-induced forces and excitation using a coordinate basis defined by the dry in-vacuum mode shapes of the structure, WAWI is able to versatily predict response based on input from any commercial FE software. The main structure used for response prediction is given in this figure:
-![Model](https://raw.githubusercontent.com/knutankv/wawi/main/docs/flowchart.png)
+![Model](https://raw.githubusercontent.com/knutankv/wawi/main/docs/flowchart.svg)
+
+The object structure of a WAWI model is given here:
+![Modelattributes](https://raw.githubusercontent.com/knutankv/wawi/main/docs/structure.svg)
+
+Further details regarding hydrodynamic definitions initiated by the `Hydro` class is given below:
+![Hydro](https://raw.githubusercontent.com/knutankv/wawi/main/docs/hydro_part.svg)
+
+Further details regarding aerodynamic definitions initiated by the `Aero` class is given below:
+![Aero](https://raw.githubusercontent.com/knutankv/wawi/main/docs/aero_part.svg)
+
 
 Quick start
 =======================
