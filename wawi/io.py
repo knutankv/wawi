@@ -11,7 +11,7 @@ from wawi.model import ModalDry, PontoonType, Node, Model, Aero, AeroSection
 def import_folder(model_folder, pontoon_stl='pontoon.stl', aero_sections='aero_sections.json',
                 modal='modal.json', pontoon='pontoon.json', eldef='element.json', orientations='orientations.json',
                 drag_elements='drag_elements.json', pontoon_types='pontoon_types.json', 
-                sort_nodes_by_x=True, interpolation_kind='quadratic'):
+                sort_nodes_by_x=True, interpolation_kind='linear'):
     
     '''
     Import folder containing files defining a WAWI model.
@@ -148,7 +148,7 @@ def import_folder(model_folder, pontoon_stl='pontoon.stl', aero_sections='aero_s
         ptypes[name] = PontoonType.from_numeric(interpolation_kind=interpolation_kind, A=P['M'], B=P['C'], 
                          omega=P['omega'], Q=P['Q'], theta=P['theta_Q'], omegaQ=P['omega_Q'], label=name, 
                          stl_path=f'{model_folder}/{pontoon_stl}', **{**ACd, **pontoon_type_settings[name]})    
-    
+
     
     # Modal dry object 
     if 'xi0' in modal:
