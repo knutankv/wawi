@@ -32,12 +32,43 @@ beaufort_dict = {
 }
 
 def get_beaufort(U0):
+    """Get the Beaufort scale for a given wind speed U0."""
+
     return [key for key in beaufort_dict if inrange(U0, beaufort_dict[key])][0]
 
 def inrange(num, rng):
+    """Check if a number is in a given range."""
     return num<=np.max(rng) and num>=np.min(rng)
 
 class LoadCoefficients:
+    """
+    Class to hold the load coefficients for a aerodynamic section
+    
+    Attributes
+    ----------
+    Cd : float
+        Drag coefficient
+    dCd : float
+        Derivative of drag coefficient with respect to reduced velocity
+    Cl : float
+        Lift coefficient
+    dCl : float
+        Derivative of lift coefficient with respect to reduced velocity
+    Cm : float
+        Moment coefficient
+    dCm : float 
+        Derivative of moment coefficient with respect to reduced velocity
+    fill_empty : bool
+        If True, fill empty attributes with zeros
+    
+    Methods
+    -------
+    fill_empty_with_zeros : None
+        Fills empty attributes with zeros
+    to_dict : dict
+        Converts the LoadCoefficients object to a dictionary
+        
+    """
     keys = ['Cd', 'Cm', 'Cl', 'dCd', 'dCm', 'dCl']
     
     def __repr__(self):
@@ -58,14 +89,54 @@ class LoadCoefficients:
             self.fill_empty_with_zeros()
         
     def fill_empty_with_zeros(self):
+        """
+        Fills empty attributes with zeros.
+        """
+        # Fill empty attributes with zeros
         for key in self.keys:
             if getattr(self, key) is None:
                 setattr(self, key, 0)
                 
     def to_dict(self):
+        """
+        Converts the LoadCoefficients object to a dictionary.
+
+        Returns
+        -------
+        dict
+            A dictionary with the keys and values of the LoadCoefficients object.
+        """
+
         return {key: getattr(self, key) for key in self.keys}
 
 class ADs:
+    """
+    Class to hold the aerodynamic derivatives (ADs) for a given aerodynamic section.
+
+    Attributes
+    ----------
+    type : str
+        Type of the aerodynamic section
+    P1, P2, P3, P4, P5, P6 : function
+        Functions representing the aerodynamic derivatives for the section, related to horizontal motion of the section.
+    H1, H2, H3, H4, H5, H6 : function
+        Functions representing the aerodynamic derivatives for the section, related to vertical motion of the section.
+    A1, A2, A3, A4, A5, A6 : function
+        Functions representing the aerodynamic derivatives for the section, related to twisting motion of the section.
+
+    Methods
+    -------
+    plot : None
+        Plots the aerodynamic derivatives for the section
+    to_dict : dict
+        Converts the ADs object to a dictionary
+    evaluate_all : dict
+        Evaluates all aerodynamic derivatives for a given reduced velocity
+    evaluate : dict
+        Evaluates a specific aerodynamic derivative for a given reduced velocity
+
+    """
+
     ad_keys = ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 
               'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 
               'A1', 'A2', 'A3', 'A4', 'A5', 'A6']
@@ -103,13 +174,47 @@ class ADs:
         self.A6 = A6
             
     def plot(self, v=np.arange(0,5,0.01), **kwargs):
+        """
+        Plots the aerodynamic derivatives for the section.
+        
+        Parameters
+        ----------
+        v : array-like
+            Reduced velocity values for which to plot the aerodynamic derivatives.
+        **kwargs : keyword arguments
+            Additional keyword arguments to pass to the `plot_ads` function.
+        """
+
         return plot_ads(self.to_dict(), v, **kwargs)
         
         
     def to_dict(self):
+        """
+        Converts the ADs object to a dictionary.
+
+        Returns
+        -------
+        dict
+            A dictionary with the keys and values of the ADs object.
+        """
+
         return {key: getattr(self, key) for key in self.ad_keys}
     
     def evaluate_all(self, v):
+        """
+        Evaluates all aerodynamic derivatives for a given reduced velocity.
+
+        Parameters
+        ----------
+        v : float
+            Reduced velocity for which to evaluate the aerodynamic derivatives.
+        
+        Returns
+        -------
+        dict
+            A dictionary with the evaluated aerodynamic derivatives.
+        """
+
         AD_evaluated = dict()
         for key in self.ad_keys:
             AD_evaluated[key] = getattr(self, key)(v)
@@ -118,12 +223,36 @@ class ADs:
     
     
     def evaluate(self, key, v):
+        """
+        Evaluates a specific aerodynamic derivative for a given reduced velocity.
+
+        Parameters
+        ----------
+        key : str
+
+            The key of the aerodynamic derivative to evaluate.
+        v : float
+            Reduced velocity for which to evaluate the aerodynamic derivative.
+
+        Returns
+        -------
+        float
+            The evaluated aerodynamic derivative.
+        """
+
         AD_evaluated = getattr(self, key)(v)
 
         return AD_evaluated
     
 def flatplate_ads():
-
+    """Flat plate aerodynamic derivatives.
+    
+    Returns
+    -------
+    dict
+        A dictionary with the aerodynamic derivatives for a flat plate.
+        
+    """
     ad_dict = dict()  
     
     def F(v):
@@ -175,8 +304,29 @@ def flatplate_ads():
 
 
 def quasisteady_ads(D, B, load_coefficients):
-    # Assuming load coeffs are normalized wrt. both D (Cd) and B (Cl and Cm) and ADs are 
-    # normalized using B only.
+    """Quasi-steady aerodynamic derivatives.
+
+    Parameters
+    ----------
+    D : float
+        Diameter of the section
+    B : float
+        Width of the section
+    load_coefficients : LoadCoefficients or dict
+        Load coefficients for the section. If a dictionary is provided, it should contain
+        the keys 'Cd', 'dCd', 'Cl', 'dCl', 'Cm', and 'dCm' with corresponding values.
+        If a LoadCoefficients object is provided, it should have the same attributes.
+    Returns
+    -------
+    dict
+        A dictionary with the aerodynamic derivatives for the section.
+    
+    Notes
+    -----
+    The aerodynamic derivatives are calculated based on the load coefficients provided. 
+    The load coefficients should be normalized with respect to both D (Cd) and B (Cl and Cm).
+    ADs are normalized using B only.
+    """
 
     if type(load_coefficients)==dict: 
         Cd = load_coefficients['Cd']
@@ -205,6 +355,36 @@ def quasisteady_ads(D, B, load_coefficients):
 
 def compute_aero_matrices(U, AD, B, elements, T_wind, phi, 
                           omega_reduced=None, print_progress=False, rho=1.225):
+    """Compute the aerodynamic matrices for a given set of elements.
+    
+    Parameters
+    ----------
+    U : float or function
+        Wind speed or function to calculate wind speed at a given point.
+    AD : ADs
+        Aerodynamic derivatives for the section.
+    B : float
+        Width of the section.
+    elements : list
+        List of elements for which to compute the aerodynamic matrices.
+    T_wind : np.ndarray
+        Transformation matrix from global to wind coordinates.
+    phi : np.ndarray
+        Mode shapes for the elements.
+    omega_reduced : np.ndarray, optional
+        Reduced frequencies for which to compute the aerodynamic matrices.
+    print_progress : bool, optional
+        If True, print progress of the computation.
+    rho : float, optional
+        Air density, default is 1.225 kg/m^3.
+        
+    Returns
+    -------
+    Kae : np.ndarray
+        Aerodynamic stiffness matrix.
+    Cae : np.ndarray    
+        Aerodynamic damping matrix.
+    """
     
     if omega_reduced is None:
         omega_reduced = np.linspace(0.015, 2.0, 75)
@@ -248,6 +428,37 @@ def compute_aero_matrices(U, AD, B, elements, T_wind, phi,
 def compute_aero_matrices_sets(U, AD, B, elements, T_wind, phi_dict, 
                           omega_reduced=None, omega=None, print_progress=False, sets=None):
     
+    """Compute the aerodynamic matrices for a given set of elements.
+    
+    Parameters
+    ----------
+    U : float or function
+        Wind speed or function to calculate wind speed at a given point.
+    AD : dict
+        Dictionary of aerodynamic derivatives for the section.
+    B : float
+        Width of the section.
+    elements : dict
+        Dictionary of elements (BEEF elements) for which to compute the aerodynamic matrices.
+    T_wind : np.ndarray
+        Transformation matrix from global to wind coordinates.
+    phi : np.ndarray
+        Mode shapes for the elements.
+    omega_reduced : np.ndarray, optional
+        Reduced frequencies for which to compute the aerodynamic matrices.
+    print_progress : bool, optional
+        If True, print progress of the computation.
+    sets : list, optional
+        List of sets of elements for which to compute the aerodynamic matrices.
+
+    Returns
+    -------
+    Kae : np.ndarray 
+        Aerodynamic stiffness matrix.
+    Cae : np.ndarray
+        Aerodynamic damping matrix.
+    """
+
     if sets is None:
          sets = elements.keys()
 
@@ -306,32 +517,6 @@ def compute_aero_matrices_sets(U, AD, B, elements, T_wind, phi_dict,
 
             return Kae, Cae
 
-def mvregress_ads(beta):
-    ad_dict = dict()
-    ad_keys = ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 
-            'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 
-            'A1', 'A2', 'A3', 'A4', 'A5', 'A6']
-    
-    for key in ad_keys:
-        ad_dict[key] = lambda v, key=key: 0
-        
-    #TODO: FINALIZE, NOT FINISHED
-
-    return ad_dict
-
-
-def f_rf_fun_legacy(a, d, v):
-    N = len(a)
-    f = 0j
-    for l in range(0, 3):
-        f = f + a[l] * (1j/v)**l
-
-    for l in range(0, N-3):
-        f = f + a[l+2]*(1j/v) / ((1j/v + d[l]))
-    
-    f = f*v**2
-    return f
-
 
 def f_rf_fun(a, d, v):
     N = len(a) 
@@ -349,6 +534,29 @@ def f_rf_fun(a, d, v):
 
 
 def rf_ads(a, d):
+    """ 
+    Function to compute the aerodynamic derivatives for a given set of reduced frequencies using rational functions.
+
+    Parameters
+    ----------
+    a : list
+        List of coefficients for the rational function, assumed in the order of 
+        P1, P2, P3, P4, P5, P6, H1, H2, H3, H4, H5, H6, A1, A2, A3, A4, A5, A6.
+    d : list
+        List of poles for the rational function, assumed in the order of 
+        P1, P2, P3, P4, P5, P6, H1, H2, H3, H4, H5, H6, A1, A2, A3, A4, A5, A6.
+
+    Returns
+    -------
+    dict
+        A dictionary with the aerodynamic derivatives for the section.
+
+    Notes
+    -----
+    The aerodynamic derivatives are calculated based on the coefficients and poles provided.
+    The coefficients should be normalized with respect to both D (Cd) and B (Cl and Cm).
+    
+    """
     # B assumed to be implicitly included in RF factors
     ad_dict = dict()
     ad_keys = ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 
@@ -375,6 +583,30 @@ def rf_ads(a, d):
 
 
 def distribute_to_dict(prefix, array, count_start=1):
+    """ 
+    Distributes a list of arrays to a dictionary with keys based on the prefix and index.
+
+    Parameters
+    ----------
+    prefix : str
+        Prefix for the keys in the dictionary.
+    array : list
+        List of arrays to be distributed.
+    count_start : int, optional
+        Starting index for the keys in the dictionary. Default is 1.
+
+    Returns
+    -------
+    dict
+        A dictionary with keys based on the prefix and index, and values from the input array.
+
+    Notes
+    -----
+    The keys in the dictionary are formed by concatenating the prefix with the index of the array.
+
+    Docstring is generated by GitHub Copilot.
+    
+    """
     array_dict = dict()
     for ix,array_i in enumerate(array):
         key = prefix + str(ix+count_start)
@@ -384,6 +616,25 @@ def distribute_to_dict(prefix, array, count_start=1):
         
 
 def distribute_multi_to_dict(prefixes, arrays):
+    """
+    Distributes a list of arrays to a dictionary with keys based on the prefix and index.
+
+    Parameters
+    ----------
+    prefixes : list
+        List of prefixes for the keys in the dictionary.
+    arrays : list
+        List of arrays to be distributed.
+
+    Returns
+    -------
+    dict
+        A dictionary with keys based on the prefix and index, and values from the input array.
+
+    Notes
+    -----
+    The keys in the dictionary are formed by concatenating the prefix with the index of the array.
+    Docstring is generated by GitHub Copilot."""
     array_dict = dict()
     
     for prefix_ix, prefix in enumerate(prefixes):
@@ -395,6 +646,24 @@ def distribute_multi_to_dict(prefixes, arrays):
 
 
 def unwrap_rf_parameters(parameters):
+    """
+    Unwraps the parameters from a dictionary into two lists: one for the coefficients and one for the poles.
+
+    Parameters
+    ----------
+    parameters : dict
+        Dictionary containing the parameters with keys starting with 'a' for coefficients and 'd' for poles.
+    
+    Returns
+    -------
+    tuple
+        tuple containing two lists: one for the coefficients and one for the poles.
+    
+    Notes
+    -----
+    Docstring is generated by GitHub Copilot.
+    """
+
     keys = list(parameters.keys())
     a_ixs = np.where([word.startswith('a') for word in keys])[0]
     d_ixs  = np.where([word.startswith('d') for word in keys])[0]
@@ -415,6 +684,24 @@ def unwrap_rf_parameters(parameters):
 
 
 def normal_wind(T_g2wi, T_g2el, U=1.0):
+    """
+    Computes the wind speed in the local coordinates of the element.
+
+    Parameters
+    ----------
+    T_g2wi : np.ndarray
+        Transformation matrix from global to wind coordinates.
+    T_g2el : np.ndarray 
+        Transformation matrix from global to element coordinates.
+    U : float, optional
+        Wind speed in the global coordinates. Default is 1.0.
+        
+    Returns
+    -------
+    np.ndarray
+        Wind speed in the local coordinates of the element.
+    """
+
     T_wi2el = T_g2el @ T_g2wi.T
     e_wind_local = (T_wi2el @ np.array([1, 0, 0])[np.newaxis,:].T).flatten()
     
@@ -520,6 +807,29 @@ def element_aero_mats(B, omega, ad_dict, L, T=None, phi=None, rho=1.225):
 
 # Spectra
 def kaimal_auto(omega, Lx, A, sigma, V):
+    """
+    Kaimal auto-spectral density function.
+
+    Parameters
+    ----------
+    omega : float
+
+        Angular frequency.
+    Lx : float
+        Length scale.
+    A : float
+        Amplitude.
+    sigma : float
+        Standard deviation of the turbulence.
+    V : float   
+        Mean wind speed.
+
+    Returns
+    -------
+    S : float
+        Auto-spectral density function value.
+    """
+
     f = omega/(2*np.pi)
     fhat = f*Lx/V
     S = (sigma**2*(A*fhat)/(1+(1.5*A*fhat))**(5/3))/f
@@ -527,6 +837,24 @@ def kaimal_auto(omega, Lx, A, sigma, V):
     return S/(2*np.pi)
 
 def von_karman_auto(omega, Lx, sigma, V):
+    """
+    Von Karman auto-spectral density function.
+    
+    Parameters
+    ----------
+    omega : float
+        Angular frequency.
+    Lx : float
+        Length scale.
+    sigma : float
+        Standard deviation of the turbulence.
+    V : float
+        Mean wind speed.
+    Returns
+    -------
+    S : float
+        Auto-spectral density function value.
+    """
    
     A1 = [
         0.0,
@@ -553,6 +881,33 @@ def von_karman_auto(omega, Lx, sigma, V):
     return S/(2*np.pi)
 
 def generic_kaimal_matrix(omega, nodes, T_wind, A, sigma, C, Lx, U, spectrum_type='kaimal'):
+    """
+    Computes the cross-spectral density matrix for a given set of nodes.
+    
+    Parameters
+    ----------
+    omega : float
+
+        Angular frequency.
+    nodes : list
+        List of BEEF nodes for which to compute the cross-spectral density matrix.
+    T_wind : np.ndarray
+        Transformation matrix from global to wind coordinates.
+    A : float or np.ndarray
+        Parameter(s) A in Kaimal auto-spectral density.
+    sigma : float or np.ndarray
+        Standard deviation of the turbulence (either single or all components).
+    C : float or np.ndarray  
+        Coefficient(s) for the cross-spectral density matrix.
+    LX : float or np.ndarray
+        Length scale(s) for the cross-spectral density matrix.
+    U : function
+        Function (of x, y and z) to calculate mean wind speed at a given point.
+    spectrum_type : str, optional
+        Type of spectrum to use. Default is 'kaimal'. Other options are 'vonKarman' or 'Karman'.
+
+    """
+
     # Adopted from MATLAB version. `nodes` is list with beef-nodes.        
     V = np.zeros(len(nodes))      # Initialize vector with mean wind in all nodes
     Su = np.zeros([len(nodes), len(nodes)])     # One-point spectra for u component in all nodes
@@ -605,6 +960,29 @@ def generic_kaimal_matrix(omega, nodes, T_wind, A, sigma, C, Lx, U, spectrum_typ
 
 
 def loadmatrix_fe(V, load_coefficients, rho, B, D, admittance=None):
+    """
+    Computes the aerodynamic load matrix for a given set of parameters.
+    
+    Parameters
+    ----------
+    V : float
+        Wind speed.
+    load_coefficients : dict
+        Dictionary containing the aerodynamic coefficients.
+    rho : float
+        Air density.
+    B : float
+        Width of the section.
+    D : float
+        Height of the section.
+    admittance : function, optional
+        Function to compute the admittance function. Default is None.
+        
+    Returns
+    -------
+    BqBq : function
+        Function to compute the aerodynamic load matrix for a given frequency.
+    """
 
     if admittance is None :
         admittance = lambda omega_k: np.ones( (4,3) )
@@ -625,6 +1003,27 @@ def loadmatrix_fe(V, load_coefficients, rho, B, D, admittance=None):
     return BqBq
 
 def loadmatrix_fe_static(V, load_coefficients, rho, B, D ):
+    """
+    Computes the aerodynamic load matrix for a given set of parameters in static conditions.
+    
+    Parameters
+    ----------
+    V : float
+        Wind speed.
+    load_coefficients : dict
+        Dictionary containing the aerodynamic coefficients.
+    rho : float
+        Air density.
+    B : float
+        Width of the section.
+    D : float
+        Height of the section.
+    
+    Returns
+    -------
+    BqBq : np.ndarray
+        Aerodynamic load matrix.
+    """
     
     Cd = load_coefficients['Cd']
     Cl = load_coefficients['Cl']
@@ -637,6 +1036,30 @@ def loadmatrix_fe_static(V, load_coefficients, rho, B, D ):
     return BqBq
 
 def loadvector(T_el, Bq, T_wind, L, static = False):
+    """
+    Computes load vectors for a given set of parameters.
+    
+    Parameters
+    ----------
+    T_el : np.ndarray
+        Transformation matrix from global to element coordinates.
+    Bq : np.ndarray
+        Aerodynamic load matrix.
+    T_wind : np.ndarray
+        Transformation matrix from global to wind coordinates.
+    L : float
+        Length of the element.
+    static : bool, optional
+        If True, compute the load vector for static conditions. Default is False.
+
+    Returns
+    -------
+    R1 : np.ndarray
+        Load vector for element node 1.
+    R2 : np.ndarray
+        Load vector for element node 2.
+
+    """
 
     G = np.zeros([12,4])
     G[0,0] = L/2
@@ -674,6 +1097,48 @@ def loadvector(T_el, Bq, T_wind, L, static = False):
 def windaction(omega, S, load_coefficients, elements, T_wind, 
                phi, B, D, U, omega_reduced=None, rho=1.225, print_progress=True,
                section_lookup=None, nodes=None, admittance=None):
+    """
+    Computes the wind cross-spectral density matrix on a set of elements using the specified parameters.
+    
+    Parameters
+    ----------
+    omega : np.ndarray
+        Angular frequency.
+    S : function
+        Function to compute the cross-spectral density matrix.
+    load_coefficients : dict
+        Dictionary containing the aerodynamic coefficients.
+    elements : list
+        List of elements for which to compute the wind cross-spectral density matrix.
+    T_wind : np.ndarray
+        Transformation matrix from global to wind coordinates.
+    phi : np.ndarray
+        Transformation matrix from global to element coordinates.
+    B : float  
+        Width of the section.
+    D : float
+        Height of the section.
+    U : function
+        Function to calculate mean wind speed at a given point.
+    omega_reduced : np.ndarray, optional    
+        Reduced angular frequency. Default is None.
+    rho : float, optional
+        Air density. Default is 1.225.
+    print_progress : bool, optional
+        If True, print progress. Default is True.
+    section_lookup : dict, optional
+        Dictionary to look up sections for each element. Default is None.
+    nodes : list, optional
+        List of BEEF nodes for which to compute the wind cross-spectral density matrix. Default is None.
+    admittance : function, optional
+        Function to compute the admittance function. Default is None.
+    
+    Returns
+    ------- 
+    genSqSq_reduced : np.ndarray
+        Cross-spectral density matrix for the wind action.
+
+    """
     
     if nodes is None:
         nodes = list(set([a for b in [el.nodes for el in elements] for a in b]))
@@ -787,6 +1252,40 @@ def windaction_static(load_coefficients, elements, T_wind,
                phi, B, D, U, rho=1.225, print_progress=True,
                section_lookup=None, nodes=None):
     
+    """
+    Computes the wind load vector for a set of elements using the specified parameters.
+    
+    Parameters
+    ----------
+    load_coefficients : dict
+        Dictionary containing the aerodynamic coefficients.
+    elements : list
+        List of BEEF elements for which to compute the wind load vector.
+    T_wind : np.ndarray
+        Transformation matrix from global to wind coordinates.
+    phi : np.ndarray
+        Transformation matrix from global to element coordinates.
+    B : float
+        Width of the section.
+    D : float
+        Height of the section.
+    U : function
+        Function to calculate mean wind speed at a given point.
+    rho : float, optional
+        Air density. Default is 1.225.
+    print_progress : bool, optional
+        If True, print progress. Default is True.
+    section_lookup : dict, optional
+        Dictionary to look up sections for each element. Default is None.
+    nodes : list, optional
+        List of BEEF nodes for which to compute the wind load vector. Default is None.
+    
+    Returns
+    -------
+    genF : np.ndarray
+        Wind load vector for the specified elements.
+        """
+    
     if nodes is None:
         nodes = list(set([a for b in [el.nodes for el in elements] for a in b]))
 
@@ -834,6 +1333,35 @@ def windaction_static(load_coefficients, elements, T_wind,
     return genF
 
 def K_from_ad(ad, V, w, B, rho):
+    """
+    Compute the aerodynamic stiffness matrix K from aerodynamic derivatives.
+
+    Parameters
+    ----------
+    ad : dict
+        Dictionary containing aerodynamic derivative functions. Expected keys are:
+        'P4', 'P6', 'P3', 'H6', 'H4', 'H3', 'A6', 'A4', 'A3'. Each value should be a callable
+        that takes a single argument (the reduced velocity `v`).
+    V : float
+        Wind velocity.
+    w : float
+        Circular frequency (rad/s). If zero, returns a zero matrix.
+    B : float
+        Reference length (e.g., bridge deck width).
+    rho : float
+        Air density.
+
+    Returns
+    -------
+    k : ndarray of shape (3, 3)
+        Aerodynamic stiffness matrix.
+
+    Notes
+    -----
+    If `w` is zero, the function returns a 3x3 zero matrix.
+    Otherwise, the matrix is computed using the provided aerodynamic derivatives evaluated at the reduced velocity.
+    """
+    
     if w==0:
         k = np.zeros([3,3])
     else:
@@ -849,6 +1377,34 @@ def K_from_ad(ad, V, w, B, rho):
 
 
 def C_from_ad(ad, V, w, B, rho):
+    """
+    Compute the aerodynamic damping matrix K from aerodynamic derivatives.
+
+    Parameters
+    ----------
+    ad : dict
+        Dictionary containing aerodynamic derivative functions. Expected keys are: 
+        'P1', 'P5', 'P2', 'H5', 'H1', 'H2', 'A5', 'A1', 'A2'. Each value should be a callable
+        that takes a single argument (the reduced velocity `v`).
+    V : float
+        Wind velocity.
+    w : float
+        Circular frequency (rad/s). If zero, returns a zero matrix.
+    B : float
+        Reference length (e.g., bridge deck width).
+    rho : float
+        Air density.
+
+    Returns
+    -------
+    k : ndarray of shape (3, 3)
+        Aerodynamic stiffness matrix.
+        
+    Notes
+    -----
+    If `w` is zero, the function returns a 3x3 zero matrix.
+    Otherwise, the matrix is computed using the provided aerodynamic derivatives evaluated at the reduced velocity.
+    """
     if w==0:
         c = np.zeros([3,3])
     else:
@@ -863,6 +1419,24 @@ def C_from_ad(ad, V, w, B, rho):
 
 
 def phi_aero_sum(mat, phi, x):
+    """
+    Computes the aerodynamic matrix (damping or stiffness) in modal coordinates.
+
+    Parameters
+    ----------
+    mat : ndarray
+        Aerodynamic matrix in global coordinates.
+    phi : ndarray
+        Transformation matrix from global to modal coordinates.
+    x : ndarray
+        Vector of x-coordinates for integration.
+
+    Returns
+    -------
+    mat : ndarray
+        Aerodynamic matrix in modal coordinates.
+    """
+
     n_modes = phi.shape[1]
     n_points = len(x)
     
@@ -878,6 +1452,24 @@ def phi_aero_sum(mat, phi, x):
 
 
 def function_sum(fun, const, fun_factor=1):
+    """
+    Function to sum a function and a constant. The function is multiplied by a factor.
+    
+    Parameters
+    ----------
+    fun : callable
+        Function to be summed with the constant.
+    const : float
+        Constant to be summed with the function.
+    fun_factor : float, optional
+        Factor to multiply the function. Default is 1.
+    
+    Returns
+    -------
+    fsum : callable
+        Function that computes the sum of the function and the constant.
+        
+    """
     def fsum(x):
         if fun is None:
             return const
@@ -888,6 +1480,33 @@ def function_sum(fun, const, fun_factor=1):
 
 
 def get_aero_cont_adfun(ad_dict_fun, V, B, rho, phi, x):
+    """
+    Computes the aerodynamic matrices in modal coordinates.
+
+    Parameters
+    ----------
+    ad_dict_fun : callable
+        Function that returns the aerodynamic derivatives for a given reduced velocity.
+    V : float
+        Wind velocity.
+    B : float
+        Reference length (e.g., bridge deck width).
+    rho : float
+        Air density.
+    phi : ndarray
+        Transformation matrix from global to modal coordinates.
+    x : ndarray
+        Vector of x-coordinates for integration.
+
+    Returns
+    ------- 
+    K : callable
+        Function that computes the aerodynamic stiffness matrix in modal coordinates.
+    C : callable
+        Function that computes the aerodynamic damping matrix in modal coordinates.
+    
+    
+    """
     def K(w):
         n_modes = phi.shape[1]
         n_points = len(x)
@@ -920,6 +1539,35 @@ def get_aero_cont_adfun(ad_dict_fun, V, B, rho, phi, x):
 
 
 def get_aero_cont_addict(ad_dict, V, B, rho, phi, x):
+    """ 
+    Computes the aerodynamic matrices in modal coordinates.
+
+    Parameters
+    ----------
+    ad_dict : dict
+        Dictionary containing aerodynamic derivative functions. Expected keys are:
+        'P4', 'P6', 'P3', 'H6', 'H4', 'H3', 'A6', 'A4', 'A3'. Each value should be a callable
+        that takes a single argument (the reduced velocity `v`).
+    V : float
+        Wind velocity.
+    B : float
+        Reference length (e.g., bridge deck width).
+    rho : float
+        Air density.
+    phi : ndarray
+        Transformation matrix from global to modal coordinates.
+    x : ndarray
+        Vector of x-coordinates for integration.
+
+    Returns
+    -------
+    K : callable
+        Function that computes the aerodynamic stiffness matrix in modal coordinates.
+    C : callable
+        Function that computes the aerodynamic damping matrix in modal coordinates.
+    
+    
+    """
     def K(w):
         kae = K_from_ad(ad_dict, V, w, B, rho)
         return phi_aero_sum(kae, phi, x)
@@ -934,6 +1582,58 @@ def get_aero_cont_addict(ad_dict, V, B, rho, phi, x):
 def itflutter_cont(Ms, Cs, Ks, phi, x, ad_dict, B, V=0.0, rho=1.225, dV=1, 
               overshoot_factor=0.5, itmax={}, omega_ref=None,
               tol={}, print_progress=True, keep_all=False, track_by_psi=True):
+    
+    """
+    Iterative flutter analysis for continuous systems using the iterative eigensolver.
+    
+    Parameters
+    ----------
+    Ms : ndarray
+        Mass matrix for in-vacuum and dry sub-structure.
+    Cs : ndarray
+        Damping matrix for in-vacuum and dry sub-structure.
+    Ks : ndarray
+        Stiffness matrix for in-vacuum and dry sub-structure.
+    phi : ndarray
+        Transformation matrix from global to modal coordinates.
+    x : ndarray
+        Vector of x-coordinates for integration.
+    ad_dict : dict or callable
+        Dictionary containing aerodynamic derivative functions or a function that returns the aerodynamic derivatives.
+        If a dictionary, it should contain the following keys: 'P4', 'P6', 'P3', 'H6', 'H4', 'H3', 'A6', 'A4', 'A3'.
+        Each value should be a callable that takes a single argument (the reduced velocity `v`).
+    B : float
+        Reference length (e.g., bridge deck width).
+    V : float, optional
+        Initial wind velocity. Default is 0.0.
+    rho : float, optional
+        Air density. Default is 1.225.
+    dV : float, optional
+        Increment for wind velocity. Default is 1.
+    overshoot_factor : float, optional
+        Factor to reduce the increment for wind velocity in case of overshooting. Default is 0.5.
+    itmax : dict, optional
+        Dictionary containing maximum iterations for velocity and frequency. Default is {'V': 50, 'f': 15}.
+    omega_ref : float, optional
+        Reference angular frequency. If None, it is computed from the eigenvalues of the system.
+    tol : dict, optional
+        Dictionary containing tolerance for velocity and frequency. Default is {'V': 1e-3, 'f': 1e-4}.
+    print_progress : bool, optional
+        If True, print progress. Default is True.
+    keep_all : bool, optional
+        If True, keep all results. Default is False.
+    track_by_psi : bool, optional
+        If True, track the eigenvectors by their similarity. Default is True.
+
+    Returns
+    -------
+    res : dict
+        Dictionary containing the results of the flutter analysis. The keys are:
+    'V' : list of wind velocities at which flutter was detected.
+    'lambd' : list of eigenvalues at which flutter was detected.
+    'critical_mode' : list of indices of the critical mode at each velocity.
+    'critical_psi' : list of eigenvectors corresponding to the critical mode at each velocity.
+    """
     
     if callable(ad_dict):
         get_aero = get_aero_cont_adfun
@@ -1028,7 +1728,52 @@ def itflutter_cont(Ms, Cs, Ks, phi, x, ad_dict, B, V=0.0, rho=1.225, dV=1,
 
 def itflutter_cont_naive(Ms, Cs, Ks, phi, x, ad_dict, B, V=0.0, rho=1.225, dV=1, 
               overshoot_factor=0.5, itmax={}, tol={}, print_progress=True):
-        
+    """
+    Iterative flutter analysis for continuous systems using a naive iteration.
+    
+    Parameters
+    ----------
+    Ms : ndarray
+        Mass matrix for in-vacuum and dry sub-structure.
+    Cs : ndarray
+        Damping matrix for in-vacuum and dry sub-structure.
+    Ks : ndarray
+        Stiffness matrix for in-vacuum and dry sub-structure.
+    phi : ndarray
+        Transformation matrix from global to modal coordinates.
+    x : ndarray
+        Vector of x-coordinates for integration.
+    ad_dict : dict or callable
+        Dictionary containing aerodynamic derivative functions or a function that returns the aerodynamic derivatives.
+        If a dictionary, it should contain the following keys: 'P4', 'P6', 'P3', 'H6', 'H4', 'H3', 'A6', 'A4', 'A3'.
+        Each value should be a callable that takes a single argument (the reduced velocity `v`).
+    B : float
+        Reference length (e.g., bridge deck width).
+    V : float, optional 
+        Initial wind velocity. Default is 0.0.
+    rho : float, optional   
+        Air density. Default is 1.225.
+    dV : float, optional
+        Increment for wind velocity. Default is 1.
+    overshoot_factor : float, optional
+        Factor to reduce the increment for wind velocity in case of overshooting. Default is 0.5.
+    itmax : dict, optional
+        Dictionary containing maximum iterations for velocity and frequency. Default is {'V': 50, 'f': 15}.
+    tol : dict, optional
+        Dictionary containing tolerance for velocity and frequency. Default is {'V': 1e-3, 'f': 1e-4}.
+    print_progress : bool, optional
+        If True, print progress. Default is True.
+
+    Returns
+    ------- 
+    res : dict
+        Dictionary containing the results of the flutter analysis. The keys are:
+    'V' : list of wind velocities at which flutter was detected.
+    'lambd' : list of eigenvalues at which flutter was detected.
+    'critical_mode' : list of indices of the critical mode at each velocity.
+    'critical_psi' : list of eigenvectors corresponding to the critical mode at each velocity.
+
+    """
         
     if callable(ad_dict):
         get_aero = get_aero_cont_adfun
@@ -1099,4 +1844,3 @@ def itflutter_cont_naive(Ms, Cs, Ks, phi, x, ad_dict, B, V=0.0, rho=1.225, dV=1,
     res = {key: np.array(res[key]) for key in ['critical_mode', 'critical_psi', 'V', 'lambd']}
     
     return res
-        

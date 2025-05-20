@@ -1,23 +1,26 @@
 import numpy as np
 from scipy.optimize import fsolve
 
-def get_combinations(n_p,n_q=None):
+def get_combinations(n_p, n_q=None):
     '''
     Establish all combinations of n indices.
 
     Parameters
-    ------------
+    ----------
     n_p : int
-        number of indices
+        Number of indices.
     n_q : None, optional
-        if integer is given, this is used - otherwise standard value None makes n_q = n_p
+        If integer is given, this is used - otherwise standard value None makes n_q = n_p.
 
     Returns
-    ------------
-    combos : int   
-        numpy array of all combinations (2-by-n_comb)
-    '''
+    -------
+    combos : list of list of int
+        List of all unique index combinations (2-by-n_comb).
 
+    Notes
+    -----
+    Docstring generated using GitHub Copilot.
+    '''
     p = np.arange(n_p)
     if n_q is None:
         q = p
@@ -25,8 +28,8 @@ def get_combinations(n_p,n_q=None):
     combos = []
     for pi in p:
         for qi in q:
-            combo = list(np.sort([pi,qi]))
-            if (pi!=qi) and (combo not in combos):
+            combo = list(np.sort([pi, qi]))
+            if (pi != qi) and (combo not in combos):
                 combos.append(combo)
                 
     return combos
@@ -34,6 +37,26 @@ def get_combinations(n_p,n_q=None):
 def wave_number_id(Sx, x, k0, Sref=None):
     '''
     Experimental function to establish wave number nonparametrically from cross spectral density.
+
+    Parameters
+    ----------
+    Sx : ndarray
+        Cross spectral density matrix, shape (n_channels, n_channels, n_freq).
+    x : ndarray
+        Array of spatial positions, shape (n_channels,).
+    k0 : float
+        Initial guess for wave number (not used in current implementation).
+    Sref : None, optional
+        Reference spectral density (not used in current implementation).
+
+    Returns
+    -------
+    k : ndarray
+        Estimated wave numbers for each frequency, shape (n_freq,).
+
+    Notes
+    -----
+    Docstring generated using GitHub Copilot.
     '''
     k = np.zeros(Sx.shape[2])
     n_freq = Sx.shape[2]
@@ -58,7 +81,6 @@ def wave_number_id(Sx, x, k0, Sref=None):
                 lnGamma[ix] = np.log(Sx[dof1, dof2, n]/S)
             k_all[ix] = 1j/dx * lnGamma[ix]
             
-        # k[n] = (b[np.newaxis,:] @ np.linalg.pinv(lnGamma[np.newaxis,:]))[0][0]
         k[n] = np.mean(k_all)
 
         

@@ -10,20 +10,31 @@ from scipy.interpolate import interp1d
 #%% General
 def dry_modalmats(f, m, rayleigh={'stiffness':0, 'mass':0}, xi0=0):
     """
-    Construct dry modal matrices.
+    Construct dry modal mass, damping, and stiffness matrices.
 
-    Args:
-        f: natural frequencies (Hz)
-        m: modal masses (kg)
-        rayleigh: dictionary with keys ('stiffness' and 'mass') characterizing damping proportional to stiffness and mass
-        xi0: constant modal critical damping ratio value (added on top of Rayleigh damping)
+    Parameters
+    ----------
+    f : array_like
+        Natural frequencies (Hz).
+    m : array_like
+        Modal masses (kg).
+    rayleigh : dict, optional
+        Dictionary with keys 'stiffness' and 'mass' for Rayleigh damping coefficients.
+    xi0 : float, optional
+        Constant modal critical damping ratio value (added on top of Rayleigh damping).
 
-    Returns:
-        Mdry: mass matrix
-        Cdry: damping matrix
-        Kdry: stiffness matrix
+    Returns
+    -------
+    Mdry : ndarray
+        Modal mass matrix.
+    Cdry : ndarray
+        Modal damping matrix.
+    Kdry : ndarray
+        Modal stiffness matrix.
 
-    Knut Andreas Kvaale, 2017
+    Notes
+    -----
+    Docstring is generated or modified using GitHub Copilot.
     """
     w = (f*2*np.pi)
     k = np.multiply(w**2, m)
@@ -38,19 +49,26 @@ def dry_modalmats(f, m, rayleigh={'stiffness':0, 'mass':0}, xi0=0):
 
 def wet_physmat(pontoon_types, angles, mat):
     """
-    Construct frequency dependent physical matrix.
+    Construct frequency dependent physical matrix for pontoons.
 
-    Args:
-        pontoon_types: list with one element per pontoon, indicating the pontoon type (referred to the index of Mh and Ch)
-        angles: list of angles of pontoons (in radians)
-        mat: list of 3D numpy matrices (6 x 6 x Nfreq), with Npontoons entries
+    Parameters
+    ----------
+    pontoon_types : list of int
+        List with one element per pontoon, indicating the pontoon type (index of Mh and Ch).
+    angles : list of float
+        List of angles of pontoons (in radians).
+    mat : list of ndarray
+        List of 3D numpy matrices (6 x 6 x Nfreq), with Npontoons entries.
 
-    Returns:
-        mat_tot: frequency dependent modal matrix (Nmod x Nmod x Nfreq)
+    Returns
+    -------
+    mat_tot : ndarray
+        Frequency dependent modal matrix (Nmod x Nmod x Nfreq).
 
-    Knut Andreas Kvaale, 2017
+    Notes
+    -----
+    Docstring is generated or modified using GitHub Copilot.
     """
-
     Nponts = len(angles)
 
     if len(np.shape(mat[0])) == 3:
@@ -77,6 +95,29 @@ def wet_physmat(pontoon_types, angles, mat):
     return mat_global
 
 def frf_fun(M, C, K, inverse=False):
+    """
+    Return a function that computes the frequency response function (FRF) or its inverse.
+
+    Parameters
+    ----------
+    M : callable
+        Function returning mass matrix for a given frequency.
+    C : callable
+        Function returning damping matrix for a given frequency.
+    K : callable
+        Function returning stiffness matrix for a given frequency.
+    inverse : bool, optional
+        If True, return the inverse FRF (default is False).
+
+    Returns
+    -------
+    function
+        Function that computes the FRF or its inverse for a given frequency.
+
+    Notes
+    -----
+    Docstring is generated or modified using GitHub Copilot.
+    """
     if inverse:
         return lambda omega_k: -omega_k**2*M(omega_k) + omega_k*1j*C(omega_k) + K(omega_k)
     else:
@@ -86,19 +127,28 @@ def frf(M, C, K, w, inverse=False):
     """
     Establish frequency response function from M, C and K matrices (all may be frequency dependent).
 
-    Args:
-        M: mass matrix (Ndofs x Ndofs x Nfreq or Ndofs x Ndofs)
-        C: damping matrix (Ndofs x Ndofs x Nfreq or Ndofs x Ndofs)
-        K: stiffness matrix (Ndofs x Ndofs x Nfreq or Ndofs x Ndofs)
-        w: frequency axis
-    Optional keywords:
-        inverse: state if the inverse of the frf should be returned instead of the frf (standard = False)
-    Returns:
-        H: frequency response function matrix (Ndofs x Ndofs x Nfreq)
+    Parameters
+    ----------
+    M : ndarray
+        Mass matrix (Ndofs x Ndofs x Nfreq or Ndofs x Ndofs).
+    C : ndarray
+        Damping matrix (Ndofs x Ndofs x Nfreq or Ndofs x Ndofs).
+    K : ndarray
+        Stiffness matrix (Ndofs x Ndofs x Nfreq or Ndofs x Ndofs).
+    w : array_like
+        Frequency axis.
+    inverse : bool, optional
+        If True, return the inverse FRF (default is False).
 
-    Knut Andreas Kvaale, 2017
+    Returns
+    -------
+    H : ndarray
+        Frequency response function matrix (Ndofs x Ndofs x Nfreq).
+
+    Notes
+    -----
+    Docstring is generated or modified using GitHub Copilot.
     """
-
     n_dofs = np.shape(K)[0]
     n_freqs = len(w)
 
@@ -126,18 +176,22 @@ def frf(M, C, K, w, inverse=False):
 
 def sum_frfs(*args):
     """
-    Sum frequency response function matrices, by summing the inverses and reinverting.
+    Sum frequency response function matrices by summing the inverses and reinverting.
 
-    Optional args:
-        first argument: first FRF (Ndofs x Ndofs x Nfreq)
-        second argument: second ...
-        etc..
-    Returns:
-        H: frequency response function matrix (Ndofs x Ndofs x Nfreq)
+    Parameters
+    ----------
+    *args : ndarray
+        Frequency response function matrices (Ndofs x Ndofs x Nfreq).
 
-    Knut Andreas Kvaale, 2017
+    Returns
+    -------
+    H : ndarray
+        Frequency response function matrix (Ndofs x Ndofs x Nfreq).
+
+    Notes
+    -----
+    Docstring is generated or modified using GitHub Copilot.
     """
-
     Hinv = np.zeros(np.shape(args[0]))
 
     for Hi in args:
@@ -149,7 +203,25 @@ def sum_frfs(*args):
 
 
 def mat3d_sel(mat, k):  
-    
+    """
+    Select the k-th slice from a 3D matrix, or return the matrix if 2D.
+
+    Parameters
+    ----------
+    mat : ndarray
+        2D or 3D matrix.
+    k : int
+        Index of the slice to select.
+
+    Returns
+    -------
+    matsel : ndarray
+        Selected matrix slice.
+
+    Notes
+    -----
+    Docstring is generated or modified using GitHub Copilot.
+    """
     if len(np.shape(mat)) == 3:
         matsel = mat[:, :, k]
     else:
@@ -160,18 +232,26 @@ def mat3d_sel(mat, k):
 
 def phys2modal(mat_global, phi_pontoons, inverse=False):
     """
-    Transform frequency dependent physical matrix to modal matrix.
+    Transform frequency dependent physical matrix to modal matrix or vice versa.
 
-    Args:
-        mat_global: global system matrix (6*Nponts x 6*Nponts x Nfreq or 6*Nponts x 6*Nponts)
-        phi_pontoons: modal transformation matrix (DOFs referring to pontoons only)
-        [inverse]: if True, the transform is from modal to physical, i.e., phi * mat * phi^T.  (default = False)
-    Returns:
-        mat_modal: frequency dependent modal matrix (Nmod x Nmod x Nfreq)
+    Parameters
+    ----------
+    mat_global : ndarray
+        Global system matrix (6*Nponts x 6*Nponts x Nfreq or 6*Nponts x 6*Nponts).
+    phi_pontoons : ndarray
+        Modal transformation matrix (DOFs referring to pontoons only).
+    inverse : bool, optional
+        If True, transform from modal to physical (default is False).
 
-    Knut Andreas Kvaale, 2017
+    Returns
+    -------
+    mat_modal : ndarray
+        Frequency dependent modal matrix (Nmod x Nmod x Nfreq).
+
+    Notes
+    -----
+    Docstring is generated or modified using GitHub Copilot.
     """
-
     if inverse is True:
         phi_pontoons = np.transpose(phi_pontoons)   # Transpose phi matrix if inverse transformation
 
@@ -190,6 +270,31 @@ def phys2modal(mat_global, phi_pontoons, inverse=False):
 
 #%% Assembly
 def assemble_hydro_matrices_full(pontoons, omega):
+    """
+    Assemble full hydrodynamic mass, damping, and stiffness matrices for all pontoons.
+
+    Parameters
+    ----------
+    pontoons : list
+        List of pontoon objects.
+    omega : array_like
+        Frequency axis.
+
+    Returns
+    -------
+    Mh : ndarray
+        Hydrodynamic mass matrix.
+    Ch : ndarray
+        Hydrodynamic damping matrix.
+    Kh : ndarray
+        Hydrodynamic stiffness matrix.
+    node_labels : list
+        List of node labels for each pontoon.
+
+    Notes
+    -----
+    Docstring is generated or modified using GitHub Copilot.
+    """
     node_labels = [pontoon.node for pontoon in pontoons]
     n_dofs = len(pontoons)*6
     n_freqs = len(omega)
@@ -212,6 +317,27 @@ def assemble_hydro_matrices_full(pontoons, omega):
 
 #%% General, model set up
 def rayleigh(alpha, beta, omega):
+    """
+    Compute Rayleigh damping ratio for a given frequency axis.
+
+    Parameters
+    ----------
+    alpha : float
+        Mass proportional damping coefficient.
+    beta : float
+        Stiffness proportional damping coefficient.
+    omega : array_like
+        Frequency axis.
+
+    Returns
+    -------
+    xi : ndarray
+        Damping ratio for each frequency.
+
+    Notes
+    -----
+    Docstring is generated or modified using GitHub Copilot.
+    """
     ix_zero = np.where(omega==0)
     
     xi = alpha * (1/(2*omega)) + beta*(omega/2)
@@ -220,6 +346,27 @@ def rayleigh(alpha, beta, omega):
     return xi
 
 def rayleigh_damping_fit(xi, omega_1, omega_2):
+    """
+    Fit Rayleigh damping coefficients for given target damping and frequencies.
+
+    Parameters
+    ----------
+    xi : float
+        Target damping ratio.
+    omega_1 : float
+        First frequency (rad/s).
+    omega_2 : float
+        Second frequency (rad/s).
+
+    Returns
+    -------
+    rayleigh_coeff : dict
+        Dictionary with 'mass' and 'stiffness' Rayleigh coefficients.
+
+    Notes
+    -----
+    Docstring is generated or modified using GitHub Copilot.
+    """
     rayleigh_coeff = dict()
     rayleigh_coeff['mass'] = 2*xi*(omega_1*omega_2)/(omega_1+omega_2)
     rayleigh_coeff['stiffness'] = 2*xi/(omega_1+omega_2)
@@ -228,6 +375,25 @@ def rayleigh_damping_fit(xi, omega_1, omega_2):
 
 #%% Simulation
 def freqsim_fun(Sqq, H):
+    """
+    Return a function that computes the response spectral density matrix.
+
+    Parameters
+    ----------
+    Sqq : callable
+        Function returning input spectral density matrix for a given frequency.
+    H : callable
+        Function returning frequency response matrix for a given frequency.
+
+    Returns
+    -------
+    function
+        Function that computes the response spectral density matrix for a given frequency.
+
+    Notes
+    -----
+    Docstring is generated or modified using GitHub Copilot.
+    """
     def response(omega):
         return H(omega) @ Sqq(omega) @ H(omega).conj().T
 
@@ -235,6 +401,25 @@ def freqsim_fun(Sqq, H):
     
 
 def freqsim(Sqq, H):
+    """
+    Compute the response spectral density matrix for all frequencies.
+
+    Parameters
+    ----------
+    Sqq : ndarray
+        Input spectral density matrix (Ndofs x Ndofs x Nfreq).
+    H : ndarray
+        Frequency response matrix (Ndofs x Ndofs x Nfreq).
+
+    Returns
+    -------
+    Srr : ndarray
+        Response spectral density matrix (Ndofs x Ndofs x Nfreq).
+
+    Notes
+    -----
+    Docstring is generated or modified using GitHub Copilot.
+    """
     n_freqs = np.shape(Sqq)[2]
     Srr = np.zeros(np.shape(Sqq)).astype('complex')
     
@@ -245,6 +430,29 @@ def freqsim(Sqq, H):
 
 
 def var_from_modal(omega, S, phi, only_diagonal=True):
+    """
+    Compute variance from modal spectral density.
+
+    Parameters
+    ----------
+    omega : array_like
+        Frequency axis.
+    S : ndarray
+        Modal spectral density matrix (Nmod x Nmod x Nfreq).
+    phi : ndarray
+        Modal transformation matrix.
+    only_diagonal : bool, optional
+        If True, return only the diagonal elements (default is True).
+
+    Returns
+    -------
+    var : ndarray
+        Variance matrix or its diagonal.
+
+    Notes
+    -----
+    Docstring is generated or modified using GitHub Copilot.
+    """
     var = phi @ np.real(np.trapz(S, omega, axis=2)) @ phi.T
 
     if only_diagonal==True:
@@ -253,6 +461,31 @@ def var_from_modal(omega, S, phi, only_diagonal=True):
     return var
 
 def peakfactor_from_modal(omega, S, phi, T, only_diagonal=True):
+    """
+    Compute peak factor from modal spectral density.
+
+    Parameters
+    ----------
+    omega : array_like
+        Frequency axis.
+    S : ndarray
+        Modal spectral density matrix (Nmod x Nmod x Nfreq).
+    phi : ndarray
+        Modal transformation matrix.
+    T : float
+        Duration for peak factor calculation.
+    only_diagonal : bool, optional
+        If True, return only the diagonal elements (default is True).
+
+    Returns
+    -------
+    kp : ndarray
+        Peak factor matrix or its diagonal.
+
+    Notes
+    -----
+    Docstring is generated or modified using GitHub Copilot.
+    """
     m0 = phi @ np.real(np.trapz(S, omega, axis=2)) @ phi.T
     m2 = phi @ np.real(np.trapz(S*omega**2, omega, axis=2)) @ phi.T
     v0 = 1/(2*np.pi) * np.sqrt(m2/m0)
@@ -264,6 +497,31 @@ def peakfactor_from_modal(omega, S, phi, T, only_diagonal=True):
     return kp
 
 def expmax_from_modal(omega, S, phi, T, only_diagonal=True):
+    """
+    Compute expected maximum from modal spectral density.
+
+    Parameters
+    ----------
+    omega : array_like
+        Frequency axis.
+    S : ndarray
+        Modal spectral density matrix (Nmod x Nmod x Nfreq).
+    phi : ndarray
+        Modal transformation matrix.
+    T : float
+        Duration for expected maximum calculation.
+    only_diagonal : bool, optional
+        If True, return only the diagonal elements (default is True).
+
+    Returns
+    -------
+    expmax : ndarray
+        Expected maximum matrix or its diagonal.
+
+    Notes
+    -----
+    Docstring is generated or modified using GitHub Copilot.
+    """
     m0 = phi @ np.real(np.trapz(S, omega, axis=2)) @ phi.T
     m2 = phi @ np.real(np.trapz(S*omega**2, omega, axis=2)) @ phi.T
     v0 = 1/(2*np.pi) * np.sqrt(m2/m0)

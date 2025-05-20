@@ -28,6 +28,44 @@ def maxreal(phi):
     return phi_max_real
 
 def get_mode_sort(lambd, order_fun_dict=None, return_as_dict=True, remove_conjugates=['dynamic'], sort=['dynamic']):
+    """
+    Sorts and classifies eigenvalues (modes) according to specified criteria.
+
+    Parameters
+    ----------
+    lambd : array_like
+        Array of eigenvalues to be classified and sorted.
+    order_fun_dict : dict or list, optional
+        Dictionary mapping mode types (str) to functions that return boolean masks for selecting eigenvalues.
+        If a list is provided, only the specified keys from the standard dictionary are used.
+        If None (default), a standard set of mode types is used: 'dynamic', 'undamped', 'unstable', 'overdamped'.
+    return_as_dict : bool, optional
+        If True (default), returns a dictionary mapping mode types to indices of eigenvalues.
+        If False, returns a concatenated array of indices.
+    remove_conjugates : list or bool, optional
+        List of mode types for which to remove every second index (to remove conjugate pairs).
+        If True, applies to all mode types. If False or empty list, does not remove conjugates.
+        Default is ['dynamic'].
+    sort : list or bool, optional
+        List of mode types for which to sort indices by the absolute value of eigenvalues.
+        If True, applies to all mode types. If False or empty list, does not sort.
+        Default is ['dynamic'].
+
+    Returns
+    -------
+    ix_dict : dict
+        Dictionary mapping mode types to arrays of indices of eigenvalues, if `return_as_dict` is True.
+    indices : ndarray
+        Concatenated array of indices, if `return_as_dict` is False.
+
+    Notes
+    -----
+    This function is useful for modal analysis, where eigenvalues are classified into categories such as
+    'dynamic', 'undamped', 'unstable', and 'overdamped' based on their real and imaginary parts. 
+
+    Docstring is generated using GitHub Copilot.
+    """
+
     order_fun_dict_std = {
         'dynamic': lambda l: np.logical_and(np.imag(l)!=0, np.real(l)<0),
         'undamped':lambda l: np.real(l)==0,
@@ -61,6 +99,41 @@ def get_mode_sort(lambd, order_fun_dict=None, return_as_dict=True, remove_conjug
         return np.hstack(list(ix_dict.values()))
        
 def sort_modes(lambd, phi=None, order_fun_dict=None, return_as_dict=True, remove_conjugates=['dynamic'], sort=['dynamic']):
+    """
+    Sorts and organizes modal data (eigenvalues and optionally eigenvectors) according to specified criteria.
+
+    Parameters
+    ----------
+    lambd : np.ndarray
+        Array of eigenvalues or modal parameters to be sorted.
+    phi : np.ndarray, optional
+        Array of eigenvectors or mode shapes corresponding to `lambd`. If provided, will be sorted in the same order as `lambd`.
+    order_fun_dict : dict, optional
+        Dictionary of functions specifying custom sorting orders for the modes.
+    return_as_dict : bool, default=True
+        If True, returns results as dictionaries keyed by mode type. If False, returns concatenated arrays.
+    remove_conjugates : list of str, default=['dynamic']
+        List of mode types for which conjugate pairs should be removed.
+    sort : list of str, default=['dynamic']
+        List of mode types to be sorted.
+
+    Returns
+    -------
+    lambd_dict : dict or np.ndarray
+        Dictionary of sorted eigenvalues by mode type if `return_as_dict` is True, otherwise a concatenated array of sorted eigenvalues.
+    phi_dict : dict or np.ndarray or None
+        Dictionary of sorted eigenvectors by mode type if `return_as_dict` is True and `phi` is provided, otherwise a concatenated array of sorted eigenvectors. Returns None if `phi` is not provided.
+   
+    Notes
+    -----
+    This function relies on `get_mode_sort` to determine the sorting and organization of the modes. Docstring is generated using GitHub Copilot.
+
+    See also
+    --------    
+    get_mode_sort : Function to classify and sort eigenvalues based on specified criteria.
+    
+    """
+
     ix_dict = get_mode_sort(lambd, order_fun_dict=order_fun_dict, return_as_dict=True, remove_conjugates=['dynamic'], sort=['dynamic'])
     lambd_dict = dict()
     
@@ -88,6 +161,34 @@ def sort_modes(lambd, phi=None, order_fun_dict=None, return_as_dict=True, remove
         
 
 def statespace(K, C, M):
+    """
+    Constructs the state-space matrix A for a second-order system defined by stiffness (K), damping (C), and mass (M) matrices.
+
+    Parameters
+    ----------
+    K : ndarray
+        Stiffness matrix of shape (n, n).
+    C : ndarray
+        Damping matrix of shape (n, n).
+    M : ndarray
+        Mass matrix of shape (n, n).
+
+    Returns
+    -------
+    A : ndarray
+        State-space matrix of shape (2n, 2n) representing the system in first-order form.
+
+    Notes
+    -----
+    The state-space matrix A is constructed for the system:
+        M * x'' + C * x' + K * x = 0
+    which is converted to first-order form as:
+        [x']   = [ 0      I ] [x ]
+        [x'']    [-M⁻¹K -M⁻¹C] [x']
+
+    Docstring is generated using GitHub Copilot.
+    """
+
     ndofs = np.shape(K)[0]
     A = np.zeros([2*ndofs, 2*ndofs])
     A[0:ndofs, ndofs:2*ndofs] = np.eye(ndofs)
@@ -100,7 +201,75 @@ def statespace(K, C, M):
 def iteig(K, C, M, omega=None, omega_ref=0, input_functions=True, itmax=None, tol=None, keep_full=False,
           mac_min=0.9, w_initial=None, normalize=False, print_progress=False, print_warnings=True,
           track_by_psi=True, remove_velocity=True, divergence_protection=True):  
+     """
+    Iterative eigenvalue solver for frequency-dependent state-space systems.
+  
+    Parameters
+    ----------
+    K : callable or array_like
+        Stiffness matrix or function K(omega) returning the stiffness matrix at frequency omega.
+    C : callable or array_like
+        Damping matrix or function C(omega) returning the damping matrix at frequency omega.
+    M : callable or array_like
+        Mass matrix or function M(omega) returning the mass matrix at frequency omega.
+    omega : array_like or None, optional
+        Frequency vector for interpolation if K, C, M are arrays (default is None).
+    omega_ref : float, optional
+        Reference frequency for initial eigenvalue estimation (default is 0).
+    input_functions : bool, optional
+        If True, K, C, M are assumed to be functions of omega. If False, they are interpolated from arrays (default is True).
+    itmax : int or None, optional
+        Maximum number of iterations per mode (default is 15).
+    tol : float or None, optional
+        Convergence tolerance for frequency (default is 1e-4).
+    keep_full : bool, optional
+        If True, keep all modes (including velocity DOFs); otherwise, keep only displacement modes (default is False).
+    mac_min : float, optional
+        Minimum Modal Assurance Criterion (MAC) value for convergence (default is 0.9).
+    w_initial : array_like or None, optional
+        Initial guess for modal frequencies (default is sorted imaginary parts of reference eigenvalues).
+    normalize : bool, optional
+        If True, normalize mode shapes to have maximum absolute value of 1 (default is False).
+    print_progress : bool, optional
+        If True, print progress during iterations (default is False).
+    print_warnings : bool, optional
+        If True, print warnings for non-convergence or divergence (default is True).
+    track_by_psi : bool, optional
+        If True, track modes by MAC with reference mode shapes; otherwise, by index (default is True).
+    remove_velocity : bool, optional
+        If True, remove velocity DOFs from output mode shapes (default is True).
+    divergence_protection : bool, optional
+        If True, activate divergence protection by averaging frequencies on oscillatory divergence (default is True).
+
+    Returns
+    -------
+    lambd : ndarray
+        Array of converged eigenvalues (complex).
+    q : ndarray
+        Array of corresponding eigenvectors (mode shapes).
+    not_converged : list of int
+        List of mode indices that did not converge within the maximum number of iterations.
+
+    Notes
+    -----
+    This function computes the eigenvalues and eigenvectors (modes) of a system with frequency-dependent stiffness (K), 
+    damping (C), and mass (M) matrices using an iterative approach. It is particularly useful for systems where these matrices
+    are functions of frequency (omega)
     
+    - The function assumes that the state-space matrix is constructed by the `statespace` function.
+    - The function uses the Modal Assurance Criterion (MAC) to check convergence of mode shapes.
+    - If `input_functions` is False, K, C, and M are interpolated using quadratic interpolation.
+    - The function can print warnings and progress information if enabled.
+
+    Docstring is generated using GitHub Copilot.
+
+    See Also
+    --------
+    statespace : Function to construct the state-space matrix.
+    xmacmat : Function to compute the MAC matrix.
+    mac : Function to compute the MAC value between two vectors.
+    """   
+     
     mean_w = False
     
     if itmax is None:
@@ -218,6 +387,38 @@ def iteig(K, C, M, omega=None, omega_ref=0, input_functions=True, itmax=None, to
 
 
 def iteig_naive(K, C, M, itmax=None, tol=1e-4):  
+    """
+    Compute eigenvalues and eigenvectors for a parameter-dependent state-space system using an iterative naive approach.
+    This function iteratively solves for the eigenvalues and eigenvectors of a system defined by parameter-dependent stiffness (K), damping (C), and mass (M) matrices. The iteration is performed for each mode, updating the frequency parameter until convergence or a maximum number of iterations is reached.
+    
+    Parameters
+    ----------
+    K : callable
+        Function returning the stiffness matrix for a given frequency parameter `w`.
+    C : callable
+        Function returning the damping matrix for a given frequency parameter `w`.
+    M : callable
+        Function returning the mass matrix for a given frequency parameter `w`.
+    itmax : int, optional
+        Maximum number of iterations for convergence (default is 15).
+    tol : float, optional
+        Convergence tolerance for the frequency parameter (default is 1e-4).
+    
+    Returns
+    -------
+    lambd : ndarray of complex
+        Array of computed eigenvalues of shape (2 * ndofs,).
+    q : ndarray of complex
+        Array of computed eigenvectors of shape (2 * ndofs, 2 * ndofs).
+    
+    Notes
+    -----
+    - The function assumes that `K(w)`, `C(w)`, and `M(w)` return square matrices of the same size for any input `w`.
+    - The function uses a state-space formulation via the `statespace` function (not defined here).
+    - Eigenvalues and eigenvectors are computed for each mode using `numpy.linalg.eig`.
+
+    Docstring is generated using GitHub Copilot.
+    """
     
     if itmax is None:
         itmax = 15
@@ -255,8 +456,67 @@ def iteig_naive(K, C, M, itmax=None, tol=1e-4):
 
 def iteig_freq(K, C, M, omega=None, itmax=15, reference_omega=0, input_functions=True, 
                tol=1e-4, keep_full=False, mac_min=0.98, w_initial=None, 
-               normalize=False, print_progress=False, print_warnings=True, divergence_protection=True):  
-    
+                normalize=False, print_progress=False, print_warnings=True, divergence_protection=True):  
+    """
+    Iterative eigenvalue analysis for frequency-dependent state-space systems.
+
+    Parameters
+    ----------
+    K : callable or ndarray
+        Stiffness matrix or function returning the stiffness matrix as a function of frequency.
+    C : callable or ndarray
+        Damping matrix or function returning the damping matrix as a function of frequency.
+    M : callable or ndarray
+        Mass matrix or function returning the mass matrix as a function of frequency.
+    omega : array_like, optional
+        Frequency vector for interpolation if input matrices are not functions. Default is None.
+    itmax : int, optional
+        Maximum number of iterations per mode. Default is 15.
+    reference_omega : float, optional
+        Reference frequency for initial guess or interpolation. Default is 0.
+    input_functions : bool, optional
+        If True, K, C, and M are assumed to be functions of frequency. If False, they are interpolated.
+        Default is True.
+    tol : float, optional
+        Convergence tolerance for frequency and mode shape. Default is 1e-4.
+    keep_full : bool, optional
+        If True, keep full state-space eigenvectors and eigenvalues. Default is False.
+    mac_min : float, optional
+        Minimum Modal Assurance Criterion (MAC) for convergence of mode shapes. Default is 0.98.
+    w_initial : array_like, optional
+        Initial guess for modal frequencies. If None, zeros are used. Default is None.
+    normalize : bool, optional
+        If True, normalize mode shapes to unit maximum absolute value. Default is False.
+    print_progress : bool, optional
+        If True, print progress during computation. Default is False.
+    print_warnings : bool, optional
+        If True, print warnings for non-convergence or divergence. Default is True.
+    divergence_protection : bool, optional
+        If True, apply protection against oscillatory divergence. Default is True.
+
+    Returns
+    -------
+    lambd : ndarray
+        Array of converged eigenvalues (complex), sorted by absolute value.
+    q : ndarray
+        Array of corresponding eigenvectors (modes), sorted to match `lambd`.
+    not_converged : list of int
+        List of mode indices that did not converge within the maximum number of iterations.
+
+    Notes
+    -----
+    This function computes the eigenvalues and eigenvectors (modes) of a system with frequency-dependent
+    stiffness (K), damping (C), and mass (M) matrices using an iterative approach. It supports both
+    direct matrix input and interpolated functions for frequency-dependent matrices.
+
+    - The function uses an iterative approach to solve for eigenvalues and eigenvectors of
+        frequency-dependent systems, which may not always converge for all modes.
+    - If `input_functions` is False, the matrices are interpolated using quadratic interpolation.
+    - The Modal Assurance Criterion (MAC) is used to check convergence of mode shapes.
+    - Divergence protection can be enabled to handle oscillatory divergence in the iterative process.
+
+    Docstring is generated using GitHub Copilot.
+    """
     if not input_functions:
         K = interp1d(omega, K, kind='quadratic', fill_value='extrapolate')
         C = interp1d(omega, C, kind='quadratic', fill_value='extrapolate')
@@ -397,6 +657,27 @@ def xmacmat(phi1, phi2=None, conjugates=True):
     return macs
 
 def mac(phi1, phi2):
+    """
+    Calculate the Modal Assurance Criterion (MAC) between two vectors.
+
+    Parameters
+    ----------
+    phi1 : array_like
+        First mode shape vector.
+    phi2 : array_like
+        Second mode shape vector.
+
+    Returns
+    -------
+    mac_value : float
+        The MAC value between `phi1` and `phi2`, ranging from 0 (no correlation) to 1 (perfect correlation).
+
+    Notes
+    -----
+    The MAC is a statistical indicator used to quantify the similarity between two mode shapes (vectors).
+    It is commonly used in modal analysis to compare experimental and analytical mode shapes. Both `phi1` and `phi2` should be 1-D arrays of the same length.    
+    
+    """
 
     mac_value = np.real(np.abs(np.dot(phi1.T,phi2))**2 / np.abs((np.dot(phi1.T, phi1) * np.dot(phi2.T, phi2))))
     return mac_value
@@ -404,6 +685,29 @@ def mac(phi1, phi2):
 
 
 def mcf(phi):
+    """
+    Calculate the modal complexity factor (MCF) for a set of mode shapes.
+
+    Parameters
+    ----------
+    phi : ndarray
+        Array of mode shapes. Can be a 1D array of length n (single mode) or a 2D array
+        of shape (n, m), where n is the number of degrees of freedom and m is the number
+        of modes. Complex values are expected.
+
+    Returns
+    -------
+    modal_complexity_factor : ndarray
+        1D array of modal complexity factors, one for each mode.
+
+    Notes
+    -----
+    The modal complexity factor is a measure of the coupling between the real and imaginary
+    parts of complex mode shapes. It is commonly used in modal analysis to quantify the
+    degree of non-proportional damping or mode complexity.
+
+    Docstring is generated using GitHub Copilot.
+    """
 
     # Ensure on matrix format
     if phi.ndim == 1:
@@ -424,10 +728,27 @@ def mcf(phi):
 
 
 def mpc(phi):
-    # Based on the current paper:
-    # Pappa, R. S., Elliott, K. B., & Schenk, A. (1993). 
-    # Consistent-mode indicator for the eigensystem realization algorithm. 
-    # Journal of Guidance, Control, and Dynamics, 16(5), 852–858.
+    """
+    Calculates the Modal Phase Collinearity (MPC) indicator for a set of mode shapes.
+   
+    Parameters
+    ----------
+    phi : np.ndarray
+        Array of mode shapes. Can be a 1D array (single mode) or a 2D array (each column is a mode shape).
+
+    Returns
+    -------
+    mpc_val : np.ndarray
+        Array of MPC values, one for each mode.
+
+    Notes
+    -----
+    The MPC is a measure used to assess the consistency of complex mode shapes, as described in:
+    Pappa, R. S., Elliott, K. B., & Schenk, A. (1993). Consistent-mode indicator for the eigensystem realization algorithm. 
+    Journal of Guidance, Control, and Dynamics, 16(5), 852–858.
+
+    Docstring is generated using GitHub Copilot.
+    """
 
     # Ensure on matrix format
     if phi.ndim == 1:
@@ -454,6 +775,34 @@ def mpc(phi):
 
 
 def scale_phi(phi, scaling):
+    """
+    Scales each mode (column) of the input matrix `phi` by the corresponding value in `scaling`.
+
+    Parameters
+    ----------
+    phi : numpy.ndarray
+        A 2D array where each column represents a mode to be scaled.
+    scaling : array_like
+        A 1D array or list of scaling factors, one for each mode (column) in `phi`.
+
+    Returns
+    -------
+    phi_scaled : numpy.ndarray
+        A 2D array of the same shape as `phi`, where each column has been multiplied by the corresponding scaling factor.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> phi = np.array([[1, 2], [3, 4]])
+    >>> scaling = [10, 0.5]
+    >>> scale_phi(phi, scaling)
+    array([[10.,  1.],
+           [30.,  2.]])
+    
+    Notes
+    -------
+    Docstring is generated using GitHub Copilot.
+    """
     phi_scaled = phi*1
     for mode in range(phi.shape[1]):
         phi_scaled[:,mode] = phi[:,mode] * scaling[mode]
@@ -461,6 +810,35 @@ def scale_phi(phi, scaling):
     return phi_scaled
 
 def normalize_phi(phi, include_dofs=[0,1,2,3,4,5,6], n_dofs=6):
+    """
+    Normalizes the columns of the mode shape matrix `phi` based on the maximum absolute value 
+    of selected degrees of freedom (DOFs).
+    
+    Parameters
+    ----------
+    phi : np.ndarray
+        The mode shape matrix to be normalized. Each column represents a mode.
+    include_dofs : list of int, optional
+        List of DOF indices to consider when determining the normalization scaling for each mode.
+        Default is [0, 1, 2, 3, 4, 5, 6].
+    n_dofs : int, optional
+        The total number of DOFs per node or element. Default is 6.
+
+    Returns
+    -------
+    phi_n : np.ndarray
+        The normalized mode shape matrix, with the same shape as `phi`.
+    mode_scaling : np.ndarray
+        The scaling factors used for normalization, one per mode (column of `phi`).
+
+    Notes
+    -----
+    - The normalization is performed such that the maximum absolute value among the selected DOFs
+      for each mode is 1, preserving the sign of the maximum value.
+    - If the maximum value for a mode is zero, the scaling factor is set to 1 to avoid division by zero.
+    
+    Docstring is generated using GitHub Copilot.
+    """
     phi_n = phi*0
 
     phi_for_scaling = np.vstack([phi[dof::n_dofs, :] for dof in include_dofs])
