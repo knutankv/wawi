@@ -201,7 +201,7 @@ def statespace(K, C, M):
 def iteig(K, C, M, omega=None, omega_ref=0, input_functions=True, itmax=None, tol=None, keep_full=False,
           mac_min=0.9, w_initial=None, normalize=False, print_progress=False, print_warnings=True,
           track_by_psi=True, remove_velocity=True, divergence_protection=True):  
-     """
+    """
     Iterative eigenvalue solver for frequency-dependent state-space systems.
   
     Parameters
