@@ -27,7 +27,8 @@ def gumbel_log(umax):
     This function sorts the input array of maxima in descending order and computes the
     Gumbel reduced variate (log-log of the empirical cumulative distribution function)
     for each value.
-    """'
+    """
+    
     umax_ordered = np.sort(umax)[::-1]
     N_stat = len(umax)
     F = 1-np.arange(1, N_stat+1)/(N_stat+1)
