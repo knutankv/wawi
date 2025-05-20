@@ -14,7 +14,7 @@ from wawi.modal import maxreal, normalize_phi, iteig_freq, iteig
 from wawi.general import transform_3dmat, eval_3d_fun, fun_const_sum, eval_3d_fun
 from wawi.structural import freqsim
 from wawi.tools import print_progress as pp
-from wawi.wave import stochastic_linearize, waveaction_fft, harmonic_linearize
+from wawi.wave import stochastic_linearize, harmonic_linearize
 from wawi.wind import windaction, windaction_static
 # from wawi.io import import_folder
 

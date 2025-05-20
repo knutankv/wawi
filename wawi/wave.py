@@ -327,19 +327,6 @@ def xsim(x, y, S, D, omega, fs=None, theta=None, n_theta=40, grid_mode=True, pri
     
     Notes
     -----
-    - The function uses the Fourier transform to generate the wave elevation based on the input spectrum and directional spreading function.
-    - The output `eta` is a time history of the wave elevation at the specified point in space.
-    - The function can handle both 1D and 2D spatial inputs for `x` and `y`.
-    - The `grid_mode` parameter allows for reshaping the output into a grid format based on the input coordinates.
-    - The `print_progress` parameter provides a progress bar during the computation.
-    - The `time_history` parameter allows for generating a time history of the wave elevation.
-    - The `phase` parameter allows for specifying the phase angles of the wave components.
-    - The `return_phases` parameter allows for returning the generated phase angles.
-    - The `theta_shift` parameter allows for applying a phase shift to the angle theta.
-    - The function assumes deep-water waves and can be generalized for different depths in the future.
-    - The function uses the Bessel function of the first kind (`jv`) and the dispersion relation for water waves.
-    - The function uses the `zero_pad_upsample` and `get_omega_upsampled` functions for upsampling and zero-padding.
-
     Docstring is generated using GitHub Copilot.
 
     """
