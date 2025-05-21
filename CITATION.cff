@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: Kvåle
+    given-names: Knut Andreas
+    orcid: https://orcid.org/0000-0003-2466-3178
+  - family-names: Fenerci
+    given-names: Aksel
+    orcid: https://orcid.org/0000-0003-1687-5568
+  - family-names: Petersen 
+    given-names: Øyvind Wiig
+    orcid: https://orcid.org/0000-0003-3563-5041
+  - family-names: Øiseth
+    given-names: Ole Andre
+    orcid: https://orcid.org/0000-0002-3746-1842
+title: "WAWI"
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.15447565
