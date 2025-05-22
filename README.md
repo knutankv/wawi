@@ -69,7 +69,7 @@ The wave field definition is based on the assumption that the two-dimensional wa
 
 Currents are defined by a homogeneous current speed `U` and corresponding direction `thetaU`.
 
-An example of a two-dimensional wave spectral density based on (arbitrarily chosen) parameters $H_s = 2.1$ m, $T_p = 2.1$ s, $\gamma$ = 4.0$, $s$ = 10$ and $\theta_0 = 75^\circ$ is shown in this plot:
+An example of a two-dimensional wave spectral density based on (arbitrarily chosen) parameters $H_s = 2.1$ m, $T_p = 2.1$ s, $\gamma = 4.0$, $s = 10$ and $\theta_0 = 75^\circ$ is shown in this plot:
 
 ![2D wave PSD](https://raw.githubusercontent.com/knutankv/wawi/main/docs/wave_S2d.png)
 
@@ -184,9 +184,8 @@ Citation
 =======================
 Please cite the use of this software as follows:
 
-Kvåle, K. A., Fenerci, A., Petersen, Ø. W., & Øiseth, O. A. (2025). WAWI. Zenodo. https://doi.org/10.5281/zenodo.15482552
-[![DOI](https://zenodo.org/badge/921621297.svg)](https://doi.org/10.5281/zenodo.14895014)
-
+Kvåle, K. A., Fenerci, A., Petersen, Ø. W., & Øiseth, O. A. (2025). WAWI. Zenodo. https://doi.org/10.5281/zenodo.14895014
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.14895014.svg)](https://doi.org/10.5281/zenodo.14895014)
 
 Support
 =======================
