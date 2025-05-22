@@ -30,7 +30,7 @@ jobs:
       - run: pip install pdoc
       # ADJUST THIS: build your documentation into docs/.
       # We use a custom build script for pdoc itself, ideally you just run `pdoc -o docs/ ...` here.
-      - run: pdoc --docformat "numpy" --math --logo "https://github.com/knutankv/wawi/blob/main/wawi-logo.svg" -o docs/ wawi 
+      - run: pdoc --docformat "numpy" --math --logo "https://raw.githubusercontent.com/knutankv/wawi/main/wawi-logo.svg" -o docs/ wawi 
 
       - uses: actions/upload-pages-artifact@v3
         with:
