@@ -75,6 +75,10 @@ An example of a two-dimensional wave spectral density based on (arbitrarily chos
 
 It is noted that you can easily assign custom functions of the `S` and `D` of the seastate (or customly on all pontoons for full control) instead of relying on the built in JONSWAP and cos-2s definitions.
 
+Furthermore, as described in relevant examples, all sea state parameters can be defined as functions of x and y, to accomodate inhomogeneous sea states. In [Kvåle et al. (2024)](https://www.sciencedirect.com/science/article/pii/S0141118723003437), the effects of inhomogeneous sea states were analysed and were shown to be large for swell sea states with spherical wave fronts as illustrated here:
+
+![Animated inhomogeneous swell](https://raw.githubusercontent.com/knutankv/wawi/main/docs/inhomogeneous_swell.gif)
+
 Wind conditions
 ----------------------
 The wind field is defined by single-point turbulence wind spectra (for all turbulence components $u$, $v$ and $w$) and coherence definitions.
@@ -163,6 +167,7 @@ The examples are structured in the following folders based on their topic:
 * **1 Modal analysis** - *Describing how to set up iterative (and incremental) modal analyses to represent the contributions from aerodynamics and hydrodynamices. Also, an example showing how to set up a multi-modal flutter analysis is given.*
 * **2 Response prediction** - *Describing how to conduct response analyses using WAWI. This includes assigning wind states, sea states, and the necessary commands to run a frequency domain analysis. Furthermore, more advanced topics such as wave-current interaction, inhomogeneous waves and stochastic linearization to represent quadratic drag damping are given in separate examples. Three models are considered: (i) a simple curved floating bridge, (ii) a single beam, (iii) a suspension bridge.*
 * **3 Software interfacing** - *Describing how to export necessary data from other software (limited to Abaqus for now) to construct a WAWI model.*
+
 
 References
 =======================
