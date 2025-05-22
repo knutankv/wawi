@@ -134,10 +134,10 @@ References
 =======================
 The following papers provide background for the implementation:
 
-* Beam (FE) description of aerodynamic forces: [Øiseth et al. (2012)](https://www.sciencedirect.com/science/article/abs/pii/S0168874X11001880)
 * Wave modelling and response prediction: [Kvåle et al. (2016)](https://www.sciencedirect.com/science/article/abs/pii/S004579491500334X)
 * Inhomogeneous wave modelling: [Kvåle et al. (2024)](https://www.sciencedirect.com/science/article/pii/S0141118723003437)
 * Hydrodynamic interaction effects: [Fenerci et al. (2022)](https://www.sciencedirect.com/science/article/pii/S095183392200017X)
+* Beam (FE) description of aerodynamic forces: [Øiseth et al. (2012)](https://www.sciencedirect.com/science/article/abs/pii/S0168874X11001880)
 * Wave-current interaction: [Fredriksen et al. (2024)](https://www.researchgate.net/profile/Arnt-Fredriksen/publication/386453916_On_the_wave-current_interaction_effect_on_linear_motion_for_floating_bridges/links/6751a40fabddbb448c65cbef/On-the-wave-current-interaction-effect-on-linear-motion-for-floating-bridges.pdf)
 
 
