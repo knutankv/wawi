@@ -878,7 +878,7 @@ def dirdist_robust(s, theta0=0, dtheta=1e-4, theta=None):
     return D
 
     
-def dispersion_relation_scalar(w, h=np.inf, g=9.81, U=0.0):
+def dispersion_relation_scalar(w, h=np.inf, g=9.81, U=0.0, theta_rel_U=0.0):
     """
     Compute the wave number `k` from the dispersion relation for surface gravity waves.
 
@@ -892,6 +892,8 @@ def dispersion_relation_scalar(w, h=np.inf, g=9.81, U=0.0):
         Gravitational acceleration [m/s^2]. Default is 9.81.
     U : float, optional
         Uniform current velocity [m/s]. Default is 0.0.
+    theta_rel_U : float, optional
+        Relative angle between current and wave direction, i.e., theta_current - theta_wave in rad.
 
     Returns
     -------
@@ -912,10 +914,12 @@ def dispersion_relation_scalar(w, h=np.inf, g=9.81, U=0.0):
 
     """
 
+    Uproj = U * np.cos(theta_rel_U)
+
     if h==np.inf:
-        f = lambda k: g*k - (w-k*U)**2
+        f = lambda k: g*k - (w-k*Uproj)**2
     else:
-        f = lambda k: g*k*np.tanh(k*h) - (w-k*U)**2
+        f = lambda k: g*k*np.tanh(k*h) - (w-k*Uproj)**2
         
     k0 = w**2/g     # deep-water, zero-current wave number
     

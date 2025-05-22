@@ -808,19 +808,18 @@ def element_aero_mats(B, omega, ad_dict, L, T=None, phi=None, rho=1.225):
 # Spectra
 def kaimal_auto(omega, Lx, A, sigma, V):
     """
-    Kaimal auto-spectral density function.
+    Kaimal auto-spectral density function (either single-component or three components).
 
     Parameters
     ----------
     omega : float
-
         Angular frequency.
-    Lx : float
-        Length scale.
-    A : float
-        Amplitude.
-    sigma : float
-        Standard deviation of the turbulence.
+    Lx : float or np.ndarray
+        Integral length scale(s).
+    A : float or np.ndarray
+        Spectral shape parameter(s).
+    sigma : float or np.ndarray
+        Standard deviation(s) of the turbulence.
     V : float   
         Mean wind speed.
 
@@ -838,16 +837,16 @@ def kaimal_auto(omega, Lx, A, sigma, V):
 
 def von_karman_auto(omega, Lx, sigma, V):
     """
-    Von Karman auto-spectral density function.
+    Von Karman auto-spectral density function (either single-component or three components).
     
     Parameters
     ----------
     omega : float
         Angular frequency.
-    Lx : float
-        Length scale.
-    sigma : float
-        Standard deviation of the turbulence.
+    Lx : float or np.ndarray
+        Integral length scale(s).
+    sigma : float or np.ndarray
+        Standard deviation(s) of the turbulence.
     V : float
         Mean wind speed.
     Returns

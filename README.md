@@ -45,16 +45,50 @@ pip install git+https://www.github.com/knutankv/wawi.git@main
 How does WAWI work?
 ======================
 By representing both aerodynamic and hydrodynamic motion-induced forces and excitation using a coordinate basis defined by the dry in-vacuum mode shapes of the structure, WAWI is able to versatily predict response based on input from any commercial FE software. The main structure used for response prediction is given in this figure:
+
 ![Model](https://raw.githubusercontent.com/knutankv/wawi/main/docs/flowchart.svg)
 
 The object structure of a WAWI model is given here:
-![Modelattributes](https://raw.githubusercontent.com/knutankv/wawi/main/docs/structure.svg)
+
+![Model attributes](https://raw.githubusercontent.com/knutankv/wawi/main/docs/structure.svg)
 
 Further details regarding hydrodynamic definitions initiated by the `Hydro` class is given below:
+
 ![Hydro](https://raw.githubusercontent.com/knutankv/wawi/main/docs/hydro_part.svg)
 
 Further details regarding aerodynamic definitions initiated by the `Aero` class is given below:
+
 ![Aero](https://raw.githubusercontent.com/knutankv/wawi/main/docs/aero_part.svg)
+
+Wave conditions
+----------------------
+The wave field definition is based on the assumption that the two-dimensional wave spectral density can be decomposed into a directional distribution and a one-dimensional wave spectral density, i.e.,  $S_\eta(\omega,\theta) = D(\theta) S(\omega)$. The two factors are defined using these well-known formulations:
+
+* $S(\omega)$: JONSWAP spectrum  (see [Hasselmann et al., 1973](https://pure.mpg.de/pubman/faces/ViewItemOverviewPage.jsp?itemId=item_3262854))
+* $D(\theta)$: cos-2s directional distribution (see Longuet-Higgins et al., 1963)
+
+Currents are defined by a homogeneous current speed `U` and corresponding direction `thetaU`.
+
+An example of a two-dimensional wave spectral density based on (arbitrarily chosen) parameters $H_s = 2.1$ m, $T_p = 2.1$ s, $\gamma$ = 4.0$, $s$ = 10$ and $\theta_0 = 75^\circ$ is shown in this plot:
+
+![2D wave PSD](https://raw.githubusercontent.com/knutankv/wawi/main/docs/wave_S2d.png)
+
+It is noted that you can easily assign custom functions of the `S` and `D` of the seastate (or customly on all pontoons for full control) instead of relying on the built in JONSWAP and cos-2s definitions.
+
+Wind conditions
+----------------------
+The wind field is defined by single-point turbulence wind spectra (for all turbulence components $u$, $v$ and $w$) and coherence definitions.
+
+By default, wind spectra can be defined using these two definitions:
+
+* Kaimal spectrum defined by length scale parameters ($L^x_u$, $L^x_v$, $L^x_w$), spectral shape parameters ($A_u$, $A_v$ and $A_w$) and turbulence intensities ($I_u$, $I_v$ and $I_w$); see [Kaimal et al., 1972](https://www.climatexchange.nl/projects/alteddy/papers/Kaimal-1972.pdf)
+* von Karmán spectrum defined by only length scale parameters ($L^x_u$, $L^x_v$, $L^x_w$) and turbulence intensities ($I_u=\sigma_u/U$, $I_v=\sigma_v/U$ and $I_w=\sigma_w/U$); see [von Kármán, 1948](http://dx.doi.org/10.1073/pnas.34.11.530)
+
+Furthermore, the coherence of the wind field is defined by the nine decay parameters $C_{ux}$, $C_{vx}$, $C_{wx}$, $C_{uy}$, $C_{vy}$, $C_{wy}$, $C_{uz}$ $C_{vz}$, $C_{wz}$; see e.g. [Simiu and Scanlan, 1996](https://library.wur.nl/WebQuery/titel/1606468) for details.
+
+An example of turbulence spectral densities based on (arbitrarily chosen) parameters $I_u=0.136$, $I_v=0.0$, $I_w=0.072$, $L^x_u=115$, $L^x_w=9.58$, $A_u=6.8$ (only relevant for Kaimal-type) and $A_w=9.4$ (only relevant for Kaimal-type) is given below:
+
+![1D turbulence PSD](https://raw.githubusercontent.com/knutankv/wawi/main/docs/wind_psd.png)
 
 
 Quick start
