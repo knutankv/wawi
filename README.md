@@ -179,8 +179,8 @@ Citation
 =======================
 Please cite the use of this software as follows:
 
-Kvåle, K. A., Fenerci, A., Petersen, Ø. W., & Øiseth, O. A. (2025). WAWI. Zenodo. https://doi.org/10.5281/zenodo.15482552
-[![DOI](https://zenodo.org/badge/921621297.svg)](https://doi.org/10.5281/zenodo.14895014)
+Kvåle, K. A., Fenerci, A., Petersen, Ø. W., & Øiseth, O. A. (2025). WAWI. Zenodo. https://doi.org/10.5281/zenodo.14895014
+![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.14895014.svg)
 
 
 Support
