@@ -125,8 +125,24 @@ class Hydro:
             return None
         else:
             return matching_pontoons[0]
+    
+
+    @property
+    def seastate(self):
+        return self._seastate
+    
+    @seastate.setter
+    def seastate(self, val):
+        self._seastate = val
+        self.assign_to_pontoons(**dict(current_affects_k=None, current_affects_Q=None))
+        self.Sqq_hydro = None
+
+        for pontoon in self.pontoons:
+            pontoon.seastate = self.seastate
         
-            
+        if self.seastate is not None:
+            self.assign_to_pontoons(**self.seastate.pontoon_options)
+
     @property
     def nodelabels(self):
         return np.array([pont.node.label for pont in self.pontoons])

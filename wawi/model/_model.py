@@ -1008,20 +1008,10 @@ class Model:
         self.aero.windstate = windstate
 
     def assign_seastate(self, seastate=None):
-        # Reset pontoon settings
-        self.hydro.assign_to_pontoons(**dict(current_affects_k=None, current_affects_Q=None))
-        self.hydro.Sqq_hydro = None
-        
         if seastate is None:
             seastate = self.hydro.seastate
         else:
             self.hydro.seastate = seastate
-
-        for pontoon in self.hydro.pontoons:
-            pontoon.seastate = seastate
-        
-        if seastate is not None:
-            self.hydro.assign_to_pontoons(**self.hydro.seastate.pontoon_options)
 
     def prepare_waveaction(self):
         x, y = self.get_all_pos()
@@ -1333,7 +1323,7 @@ class Model:
         return Kfun, Cfun, Mfun
     
     
-    def get_frf_fun(self, include=['hydro', 'aero', 'drag_elements'], opt = 0):
+    def get_frf_fun(self, include=['hydro', 'aero', 'drag_elements'], return_inverse=False):
         Kfun, Cfun, Mfun = self.get_system_matrices(include)
 
         def frf(omega_k):
@@ -1341,10 +1331,11 @@ class Model:
         
         def imp(omega_k):
             return (-omega_k**2*Mfun(omega_k) + 1j*omega_k*Cfun(omega_k) + Kfun(omega_k))
-        if opt == 0:
-            return frf
-        else:
+        
+        if return_inverse:
             return imp
+        else:
+            return frf
         
     def get_node_ix(self, nodelabel):
         ix = np.where(self.eldef.get_node_labels()==nodelabel)[0]

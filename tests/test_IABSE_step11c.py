@@ -164,7 +164,7 @@ def test_mean_speed_45():
     model.aero.sections['girder0'].ADs = ADs(**AD_s)
     model.aero.prepare_aero_matrices()
     omega = np.array([0.001, f])*np.pi*2
-    HH = eval_3d_fun(model.get_frf_fun(opt = 1), omega)
+    HH = eval_3d_fun(model.get_frf_fun(return_inverse=True), omega)
 
     model.aero.sections['girder0'].admittance = lambda fred: np.full((4, 3), davenport(fred))
     model.run_freqsim(omega,
