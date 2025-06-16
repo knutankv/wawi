@@ -11,8 +11,28 @@ from scipy.linalg import block_diag
 
 '''
 HYDRO SUBMODULE
-'''     
-class Hydro:    
+'''
+class Hydro:
+    """
+    Represents a hydrodynamic system consisting of multiple pontoons.
+
+    Parameters
+    ----------
+    pontoons : list of Pontoon, optional
+        List of Pontoon objects in the system.
+    phi_key : str, optional
+        Key to identify the hydrodynamic mode shapes. Default is 'hydro'.
+    environment : Environment, optional
+        The environment in which the hydrodynamic system exists.
+    phases_lead : bool, optional
+        Whether phases lead in the system. Default is False.
+    seastate : Seastate, optional
+        The sea state conditions for the system. Default is None.
+
+    Notes
+    -----
+    This documentation was automatically generated using GitHub Copilot.
+    """
     def __init__(self, pontoons=None, phi_key='hydro', environment=None, phases_lead=False, seastate=None):
             self.pontoons = pontoons
             self.phi_key = phi_key
@@ -155,6 +175,24 @@ class Hydro:
 ENVIRONMENT CLASS
 '''
 class Environment:
+    """
+    Represents the environmental conditions for the hydrodynamic system.
+
+    Parameters
+    ----------
+    g : float, optional
+        Acceleration due to gravity (m/s^2). Default is 9.80655.
+    rho : float, optional
+        Density of the water (kg/m^3). Default is 1.025e3.
+    depth : float, optional
+        Depth of the water (m). Default is numpy.inf.
+    waterlevel : float, optional
+        Water level (m). Default is 0.
+
+    Notes
+    -----
+    This documentation was automatically generated using GitHub Copilot.
+    """
     def __init__(self, g=9.80655, rho=1.025e3, depth=np.inf, waterlevel=0):
         self.g = g
         self.rho = rho
@@ -167,6 +205,32 @@ PONTOON CLASS
 '''
 
 class Pontoon:
+    """
+    Represents a pontoon in the hydrodynamic system.
+
+    Parameters
+    ----------
+    node : Node
+        The node to which the pontoon is attached.
+    pontoon_type : PontoonType
+        The type of the pontoon.
+    rotation : float, optional
+        The rotation of the pontoon (radians). Default is 0.
+    label : str, optional
+        The label of the pontoon. Default is 'pontoon'.
+    current_affects_Q : bool, optional
+        Whether the current affects the wave excitation force. Default is None.
+    seastate : Seastate, optional
+        The sea state conditions for the pontoon. Default is None.
+    environment : Environment, optional
+        The environment in which the pontoon exists. Default is None.
+    current_affects_k : bool, optional
+        Whether the current affects the stiffness. Default is None.
+
+    Notes
+    -----
+    This documentation was automatically generated using GitHub Copilot.
+    """
     def __init__(self, node, pontoon_type, rotation=0, label='pontoon', 
         current_affects_Q=None, seastate=None, environment=None, current_affects_k=None):
 
@@ -496,6 +560,50 @@ SEASTATE CLASS
 '''
 
 class Seastate:
+    """
+    Represents a sea state for hydrodynamic analysis.
+
+    Parameters
+    ----------
+    Tp : float
+        Peak period.
+    Hs : float
+        Significant wave height.
+    gamma : float
+        JONSWAP gamma parameter.
+    theta0 : float
+        Mean wave direction (deg or rad).
+    s : float, optional
+        Spreading parameter. Default is np.inf.
+    depth : float, optional
+        Water depth. Default is None.
+    origin : array_like, optional
+        Origin coordinates. Default is None.
+    ranges : dict, optional
+        Ranges for x and y. Default is None.
+    options : dict, optional
+        Additional options. Default is {{}}.
+    pontoon_options : dict, optional
+        Pontoon-specific options. Default is {{}}.
+    name : str, optional
+        Name of the seastate. Default is None.
+    plot_label : str, optional
+        Label for plotting. Default is None.
+    centered_dirdist : bool, optional
+        Whether to center the directional distribution. Default is True.
+    U : float, optional
+        Current speed. Default is None.
+    thetaU : float, optional
+        Current direction. Default is None.
+    use_robust_D : bool, optional
+        Whether to use robust directional distribution. Default is True.
+    angle_unit : str, optional
+        Unit for angles ('deg' or 'rad'). Default is 'deg'.
+
+    Notes
+    -----
+    This documentation was automatically generated using GitHub Copilot.
+    """
     def __init__(self, Tp, Hs, gamma, theta0, s=np.inf, depth=None, origin=None, ranges=None, 
                  options={}, pontoon_options={}, name=None, plot_label=None, centered_dirdist=True,
                  U=None, thetaU=None, use_robust_D=True, angle_unit='deg'):
@@ -761,6 +869,20 @@ NODE CLASS (MINIMUM CLASS FOR WHEN BEEF MODEL IS NOT APPENDED TO MODEL OBJECT)
 '''
 
 class Node:
+    """
+    Represents a node in the hydrodynamic model.
+
+    Parameters
+    ----------
+    label : str
+        Node label.
+    x, y, z : float, optional
+        Node coordinates. Default is 0.0.
+
+    Notes
+    -----
+    This documentation was automatically generated using GitHub Copilot.
+    """
     def __init__(self, label, x=0.0, y=0.0, z=0.0):
         self.x0 = np.array([x,y,z,0.0,0.0,0.0]).astype(float)
         self.x = np.array([x,y,z,0.0,0.0,0.0]).astype(float)
@@ -778,6 +900,30 @@ PONTOONTYPE CLASS
 '''
 
 class PontoonType:
+    """
+    Represents a pontoon type with hydrodynamic properties.
+
+    Parameters
+    ----------
+    K, C, M, Q : callable or None
+        Functions for stiffness, damping, mass, and excitation force.
+    original_omega, original_omegaQ : array_like or None
+        Frequencies for hydrodynamic data.
+    theta : array_like or None
+        Wave directions.
+    label : str, optional
+        Label for the pontoon type. Default is 'unnamed'.
+    Cd : array_like, optional
+        Drag coefficients. Default is None.
+    area : array_like, optional
+        Areas. Default is None.
+    stl_path : str, optional
+        Path to STL file for mesh. Default is None.
+
+    Notes
+    -----
+    This documentation was automatically generated using GitHub Copilot.
+    """
     def __init__(self, K=None, C=None, M=None, Q=None, original_omega=None, original_omegaQ=None,
                  theta=None, label='unnamed', Cd=None, area=None, stl_path=None):
         self.K = K

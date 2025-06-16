@@ -14,7 +14,7 @@ class TestJonswap(TC):
         gamma = 3.2
 
         S1 = jonswap(Hs, Tp, gamma)(omega)
-        S2 = jonswap(Hs, Tp, gamma, omega)
+        S2 = jonswap_numerical(Hs, Tp, gamma, omega)
 
         assert_array_equal(S1, S2)
 

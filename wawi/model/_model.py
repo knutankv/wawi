@@ -20,7 +20,6 @@ from wawi.wind import windaction, windaction_static
 
 import dill
 
-
 import matplotlib.pyplot as plt
 
 from scipy.interpolate import interp1d
@@ -32,7 +31,43 @@ RESULTS SUBMODULE
 '''
 
 class Results:
+    """
+    Stores modal and spectral results for a model.
+
+    Parameters
+    ----------
+    psi : ndarray, optional
+        Modal matrix.
+    lambd : ndarray, optional
+        Eigenvalues.
+    S : ndarray, optional
+        Spectral density matrix.
+    omega : ndarray, optional
+        Frequency vector.
+    model : Model, optional
+        Reference to the parent model.
+
+    Notes
+    -----
+    This documentation was automatically generated using GitHub Copilot.
+    """
     def __init__(self, psi=None, lambd=None, S=None, omega=None, model=None):
+        """
+        Initialize Results object.
+
+        Parameters
+        ----------
+        psi : ndarray, optional
+            Modal matrix.
+        lambd : ndarray, optional
+            Eigenvalues.
+        S : ndarray, optional
+            Spectral density matrix.
+        omega : ndarray, optional
+            Frequency vector.
+        model : Model, optional
+            Reference to the parent model.
+        """
         self.psi = psi
         self.lambd = lambd
         self.S = S
@@ -42,6 +77,14 @@ class Results:
         
     @property
     def mdiag(self):
+        """
+        Diagonal modal masses for each mode.
+
+        Returns
+        -------
+        ndarray
+            Modal masses.
+        """
         Kfun, Cfun, Mfun = self.model.get_system_matrices(self.include_eig)
         m = np.zeros(self.lambd.shape[0])
         for ix, wi in enumerate(self.wd):
@@ -52,6 +95,14 @@ class Results:
     
     @property
     def kdiag(self):
+        """
+        Diagonal modal stiffnesses for each mode.
+
+        Returns
+        -------
+        ndarray
+            Modal stiffnesses.
+        """
         Kfun, Cfun, Mfun = self.model.get_system_matrices(self.include_eig)
         k = np.zeros(self.lambd.shape[0])
         for ix, wi in enumerate(self.wd):
@@ -63,6 +114,14 @@ class Results:
     
     @property
     def cdiag(self):
+        """
+        Diagonal modal damping for each mode.
+
+        Returns
+        -------
+        ndarray
+            Modal damping.
+        """
         Kfun, Cfun, Mfun = self.model.get_system_matrices(self.include_eig)
         c = np.zeros(self.lambd.shape[0])
         for ix, wi in enumerate(self.wd):
@@ -74,36 +133,92 @@ class Results:
     
     @property
     def xi(self):
+        """
+        Modal damping ratios for each mode.
+
+        Returns
+        -------
+        ndarray
+            Damping ratios.
+        """
         if self.lambd is not None:
             return -np.real(self.lambd)/np.abs(self.lambd)
 
     @property
     def wn(self):
+        """
+        Modal natural frequencies for each mode.
+
+        Returns
+        -------
+        ndarray
+            Natural frequencies.
+        """
         if self.lambd is not None:
             return np.abs(self.lambd)
 
     @property
     def wd(self):
+        """
+        Modal damped frequencies for each mode.
+
+        Returns
+        -------
+        ndarray
+            Damped frequencies.
+        """
         if self.lambd is not None:
             return np.abs(np.imag(self.lambd))
    
     @property
     def fn(self):
+        """
+        Modal natural frequencies in Hz for each mode.
+
+        Returns
+        -------
+        ndarray
+            Natural frequencies in Hz.
+        """
         if self.lambd is not None:
             return np.abs(self.lambd)/2/np.pi      
         
     @property
     def fd(self):
+        """
+        Modal damped frequencies in Hz for each mode.
+
+        Returns
+        -------
+        ndarray
+            Damped frequencies in Hz.
+        """
         if self.lambd is not None:
             return np.abs(np.imag(self.lambd))/2/np.pi                              
 
     @property
     def Tn(self):
+        """
+        Modal natural periods for each mode.
+
+        Returns
+        -------
+        ndarray
+            Natural periods.
+        """
         if self.lambd is not None:
             return 1/(np.abs(self.lambd)/2/np.pi)    
         
     @property
     def Td(self):
+        """
+        Modal damped periods for each mode.
+
+        Returns
+        -------
+        ndarray
+            Damped periods.
+        """
         if self.lambd is not None:
             return 1/(np.abs(np.imag(self.lambd))/2/np.pi)   
 
@@ -111,6 +226,28 @@ class Results:
 DRAG ELEMENT CLASS
 '''
 class DragElement:
+    """
+    Represents a drag element for hydrodynamic quadratic drag damping.
+
+    Parameters
+    ----------
+    element : beef.fe.BeamElement3d or similar
+        The finite element.
+    Cd : float or array_like
+        Drag coefficient(s).
+    D : float, optional
+        Diameter or characteristic length. Default is 1.0.
+    rho : float, optional
+        Fluid density. Default is 1025.0.
+    group : str, optional
+        Group label. Default is None.
+    eltype : str, optional
+        Element type ('beam', 'bar', etc). Default is None.
+
+    Notes
+    -----
+    This documentation was automatically generated using GitHub Copilot.
+    """
     def __init__(self, element, Cd, D=1.0, rho=1025.0, group=None, eltype=None):
 
         self.group = group
@@ -124,6 +261,14 @@ class DragElement:
 
     @property
     def eltype(self):
+        """
+        Element type ('beam' or 'bar').
+
+        Returns
+        -------
+        str
+            Element type.
+        """
         if hasattr(self, '_eltype') and self._eltype is not None:
             return self._eltype
         elif isinstance(self.element, fe.BeamElement3d):
@@ -138,6 +283,14 @@ class DragElement:
 
     @property
     def cquad_local(self):
+        """
+        Local quadratic drag damping matrix.
+
+        Returns
+        -------
+        ndarray
+            Local quadratic drag stiffness matrix.
+        """
         c = (0.5 * self.Cd * self.rho * self.D)[:3]        #Linearized as 0.25 Cd D L sqrt(8/pi) * stdudot according to A Wang- seems to work well for linearized,check nonlin also
         from beef.general import bar_foundation_stiffness, generic_beam_mat
     
@@ -157,15 +310,39 @@ class DragElement:
    
     @property
     def cquad(self):                   
+        """
+        Global quadratic drag damping matrix.
+
+        Returns
+        -------
+        ndarray
+            Global quadratic drag damping matrix.
+        """
         return self.element.tmat.T @ self.cquad_local @ self.element.tmat  
    
     
     def get_cquad_lin(self, var_udot, stochastic=True, 
                       input_is_local=False, ensure_local_output=False):
-        # var_udot is covariance matrix of velocity of nodes
-        # local_input: whether or not the var_udot is referring to a local csys - if not, it will be transformed to local
-        # prior to C computation
-        # local_output: whether or not the output should be local - global output is standard
+        """
+        Compute linearized quadratic drag damping matrix.
+
+        Parameters
+        ----------
+        var_udot : ndarray
+            Covariance matrix of velocity of nodes.
+        stochastic : bool, optional
+            Whether to use stochastic linearization. Default is True.
+        input_is_local : bool, optional
+            Whether var_udot is referring to a local csys. Default is False.
+        ensure_local_output : bool, optional
+            Whether the output should be local. Default is False.
+
+        Returns
+        -------
+        ndarray
+            Linearized quadratic drag stiffness matrix.
+        """
+
         if not input_is_local:     
             Tin = self.element.tmat
         else:
@@ -189,6 +366,14 @@ class DragElement:
     # Get and set methods D and Cd
     @property  
     def D(self):
+        """
+        Characteristic length (diameter) for drag.
+
+        Returns
+        -------
+        ndarray
+            Characteristic length for drag.
+        """
         if np.ndim(self._D) == 0:
             return np.hstack([self._D*np.ones(3), [0, 0, 0]])
         elif len(self._D) == 3:
@@ -202,6 +387,14 @@ class DragElement:
         
     @property        
     def Cd(self):
+        """
+        Drag coefficient for the element.
+
+        Returns
+        -------
+        ndarray
+            Drag coefficient.
+        """
         if np.ndim(self._Cd) == 0:
             return np.hstack([self._Cd*np.ones(3), [0,0,0]])
         elif len(self._Cd) == 3:
@@ -224,6 +417,40 @@ MODEL CLASS
 '''
 
 class Model:
+    """
+    Main model class for coupled hydro-elastic-aero analysis.
+
+    Parameters
+    ----------
+    hydro : Hydro, optional
+        Hydrodynamic model.
+    aero : object, optional
+        Aerodynamic model.
+    eldef : object, optional
+        Structural model (BEEF ElDef).
+    modal_dry : ModalDry, optional
+        ModalDry object for dry modes.
+    seastate : Seastate, optional
+        Sea state.
+    windstate : object, optional
+        Wind state.
+    n_dry_modes : int, optional
+        Number of dry modes.
+    x0_wave : array_like, optional
+        Reference point for wave action.
+    phases_lead : bool, optional
+        Whether phases lead. Default is False.
+    use_multibody : bool, optional
+        Use multibody solver if available. Default is True.
+    avoid_eldef : bool, optional
+        Avoid creating eldef if True. Default is False.
+    drag_elements : dict or list, optional
+        Drag elements specification.
+
+    Notes
+    -----
+    This documentation was automatically generated using GitHub Copilot.
+    """
     def __init__(self, hydro=None, aero=None, eldef=None, modal_dry=None, seastate=None, windstate=None,
                  n_dry_modes=None, x0_wave=None, phases_lead=False,
                  use_multibody=True, avoid_eldef=False, drag_elements={}):
@@ -268,17 +495,6 @@ class Model:
             
         self.Cquad_lin = 0.0
     
-    # Not used due to circular referencing.
-    # @staticmethod
-    # def from_folder(*args, **kwargs):
-    #     '''
-    #     Alternative constructor. Passes all inputs to `wawi.io.import_folder`.
-    #     '''
-
-    #     model = import_folder(*args, **kwargs)
-        
-    #     return model
-    
 
     @staticmethod    #alternative constructor
     def from_wwi(path):
@@ -289,6 +505,14 @@ class Model:
 
 
     def assign_drag_elements(self, drag_elements):
+        """
+        Assign drag elements to the model.
+
+        Parameters
+        ----------
+        drag_elements : dict
+            Drag elements specification.
+        """
         drag_els = [None]*len(drag_elements)
         for ix, group_key in enumerate(drag_elements):
             els = self.eldef.get_els_with_sec(drag_elements[group_key]['sections'])
@@ -316,6 +540,21 @@ class Model:
     
         
     def get_modal_cquad(self, dry=False, psi=None):
+        """
+        Compute modal quadratic drag coefficients.
+
+        Parameters
+        ----------
+        dry : bool, optional
+            Whether to use dry modes. Default is False.
+        psi : ndarray, optional
+            Modal matrix. Default is None.
+
+        Returns
+        -------
+        ndarray
+            Modal quadratic drag coefficients.
+        """
         if psi is None:
             if dry:
                 psi = np.eye(self.n_modes)
@@ -346,6 +585,14 @@ class Model:
     
     @property
     def tmat_full(self):
+        """
+        Full transformation matrix for the model.
+
+        Returns
+        -------
+        ndarray
+            Full transformation matrix.
+        """
         all_tmats = []
         for node in self.eldef.nodes:
             all_tmats.append(self.eldef.get_node_csys(node.label))
@@ -353,6 +600,14 @@ class Model:
 
     @property
     def Cquad_lin_pontoons(self):    # Only pontoons
+        """
+        Linearized quadratic drag stiffness matrix for pontoons.
+
+        Returns
+        -------
+        ndarray
+            Linearized quadratic drag stiffness matrix for pontoons.
+        """
         mat = self.initialize_const_matrix()
         for ix, p in enumerate(self.hydro.pontoons):        
             mat[ix*6:ix*6+6, ix*6:ix*6+6] = p.Cquad_lin
@@ -361,6 +616,14 @@ class Model:
     
     @property
     def n_modes(self):
+        """
+        Number of modes in the model.
+
+        Returns
+        -------
+        int
+            Number of modes.
+        """
         return self.modal_dry.n_modes
 
     @n_modes.setter
@@ -371,6 +634,14 @@ class Model:
 
     @property
     def Cquad(self):    # Only drag elements
+        """
+        Quadratic drag stiffness matrix for the model.
+
+        Returns
+        -------
+        ndarray
+            Quadratic drag stiffness matrix.
+        """
         # Requires global representation (phi_full) currently. Consider supporting modal form referring to specific keys.
         # self.local only refers to phi of pontoons
         C = np.zeros([self.eldef.ndofs, self.eldef.ndofs])
@@ -383,7 +654,23 @@ class Model:
         return C
         
     def get_Cquad_lin(self, var_udot, local=None, stochastic=True):    # Only drag elements
-        
+        """
+        Compute linearized quadratic drag stiffness matrix for the model.
+
+        Parameters
+        ----------
+        var_udot : ndarray
+            Covariance matrix of velocity of nodes.
+        local : bool, optional
+            Whether the output should be local. Default is None.
+        stochastic : bool, optional
+            Whether to use stochastic linearization. Default is True.
+
+        Returns
+        -------
+        ndarray
+            Linearized quadratic drag stiffness matrix.
+        """
         if local is None:
             local = self.local*1
 
@@ -407,6 +694,14 @@ class Model:
         
             
     def construct_simple_eldef(self, node_labels=None):
+        """
+        Construct a simple eldef (element definition) for the model.
+
+        Parameters
+        ----------
+        node_labels : array_like, optional
+            Node labels. Default is None.
+        """
         if node_labels is None:
             node_labels = np.arange(1,len(self.hydro.pontoons)+1,1)
             
@@ -428,9 +723,37 @@ class Model:
     
         
     def initialize_const_matrix(self, astype=float):
+        """
+        Initialize a constant matrix for the model.
+
+        Parameters
+        ----------
+        astype : type, optional
+            Data type of the matrix. Default is float.
+
+        Returns
+        -------
+        ndarray
+            Constant matrix.
+        """
         return np.zeros([len(self.hydro.pontoons)*6, len(self.hydro.pontoons)*6]).astype(astype)
 
     def initialize_freq_matrix(self, n_freq, astype=float):
+        """
+        Initialize a frequency matrix for the model.
+
+        Parameters
+        ----------
+        n_freq : int
+            Number of frequency points.
+        astype : type, optional
+            Data type of the matrix. Default is float.
+
+        Returns
+        -------
+        ndarray
+            Frequency matrix.
+        """
         return np.zeros([len(self.hydro.pontoons)*6, len(self.hydro.pontoons)*6, n_freq]).astype(astype)
 
     def __repr__(self):
@@ -440,17 +763,36 @@ class Model:
         return f'WAWI model <{self.__hash__()}>'
     
     def to_wwi(self, path):
+        """
+        Save the model to a WWI file.
+
+        Parameters
+        ----------
+        path : str
+            File path to save the model.
+        """
         with open(path, 'wb') as f:
             dill.dump(self, f, -1)
         
     
     def get_all_pos(self):
+        """
+        Get the positions of all pontoons in the model.
+
+        Returns
+        -------
+        tuple
+            Tuple containing arrays of x and y coordinates of pontoons.
+        """
         x = np.array([pont.node.x[0] for pont in self.hydro.pontoons])
         y = np.array([pont.node.x[1] for pont in self.hydro.pontoons])
         return x,y
     
     
     def assign_dry_modes(self):
+        """
+        Assign dry modes to the hydro and aero components of the model.
+        """
         if self.hydro is not None:
             self.hydro.phi = self.modal_dry.get_phi(key=self.hydro.phi_key)
         if self.aero is not None:
@@ -458,6 +800,9 @@ class Model:
 
 
     def connect_eldef(self):
+        """
+        Connect the eldef (element definition) to the hydro and aero components of the model.
+        """
         if self.eldef is not None:
             if self.hydro is not None:
                 # Connect pontoons to nodes in beef eldef
@@ -485,7 +830,29 @@ class Model:
                 
     def plot_mode(self, mode_ix, use_dry=False, scale=300, title=None, plot_wind_axes=False, 
                   plot_states=['deformed', 'undeformed'], plot_wave_direction=False, **kwargs):
-        
+        """
+        Plot the mode shape for a given mode index.
+
+        Parameters
+        ----------
+        mode_ix : int
+            Mode index to be plotted.
+        use_dry : bool, optional
+            Whether to use dry modes. Default is False.
+        scale : float, optional
+            Scale factor for the mode shape. Default is 300.
+        title : str, optional
+            Title of the plot. Default is None.
+        plot_wind_axes : bool, optional
+            Whether to plot wind axes. Default is False.
+        plot_states : list, optional
+            List of states to be plotted ('deformed', 'undeformed'). Default is ['deformed', 'undeformed'].
+
+        Returns
+        -------
+        pyvista.Plotter
+            PyVista plotter object with the mode shape plot.
+        """
         if use_dry: 
             phi_plot = self.get_dry_phi(key='full')
         else:
@@ -500,6 +867,25 @@ class Model:
         return pl
     
     def export_modeshapes(self, folder, n_modes=None, format='pdf', title=None, zoom=1.0, **kwargs):
+        """
+        Export mode shapes to files.
+
+        Parameters
+        ----------
+        folder : str
+            Folder path to save the mode shape files.
+        n_modes : int, optional
+            Number of modes to export. Default is None.
+        format : str, optional
+            File format for the exported mode shapes. Default is 'pdf'.
+        title : callable or str, optional
+            Title for the mode shape plots. Default is None.
+        zoom : float, optional
+            Zoom factor for the plots. Default is 1.0.
+
+        **kwargs : keyword arguments
+            Additional arguments passed to the plot_mode method.
+        """
         if title is None:
             title = lambda mode: f'Mode {mode+1}:\nTd = {self.results.Td[mode]:.2f}s\nxi = {self.results.xi[mode]*100:.2f}%'
             
@@ -518,6 +904,14 @@ class Model:
 
 
     def copy(self):
+        """
+        Create a copy of the model.
+
+        Returns
+        -------
+        Model
+            Copied model object.
+        """
         return copy(self)
     
     def plot(self, use_R=False, plot_water=True, 
@@ -525,7 +919,50 @@ class Model:
              title=None, show=True, plot_wind_at_centre=True, axis_scaling=100, plot_states=['undeformed'],
              plot_wave_direction=True, wave_origin='center', pontoons_on=['deformed', 'undeformed'],
              thickness_scaling=None, annotate_pontoon_type=False, **kwargs):
-        
+        """
+        Plot the model in 3D.
+
+        Parameters
+        ----------
+        use_R : bool, optional
+            Whether to use rotation tensors. Default is False.
+        plot_water : bool, optional
+            Whether to plot the water surface. Default is True.
+        waterplane_padding : list, optional
+            Padding for the water plane. Default is [1800, 1800].
+        plot_wind_axes : bool, optional
+            Whether to plot wind axes. Default is True.
+        wind_ax : list, optional
+            List of wind axes to be plotted. Default is [0].
+        title : str, optional
+            Title of the plot. Default is None.
+        show : bool, optional
+            Whether to show the plot. Default is True.
+        plot_wind_at_centre : bool, optional
+            Whether to plot wind direction at the centre. Default is True.
+        axis_scaling : float, optional
+            Scaling factor for the axes. Default is 100.
+        plot_states : list, optional
+            List of states to be plotted ('undeformed', 'deformed'). Default is ['undeformed'].
+        plot_wave_direction : bool, optional
+            Whether to plot wave direction. Default is True.
+        wave_origin : str or array_like, optional
+            Origin of the wave direction arrow. Default is 'center'.
+        pontoons_on : list, optional
+            List of states to plot pontoons on ('deformed', 'undeformed'). Default is ['deformed', 'undeformed'].
+        thickness_scaling : str or None, optional
+            Scaling for the thickness of pontoons ('area' or None). Default is None.
+        annotate_pontoon_type : bool, optional
+            Whether to annotate pontoons with their type. Default is False.
+
+        **kwargs : keyword arguments
+            Additional arguments passed to the PyVista plotter.
+
+        Returns
+        -------
+        pyvista.Plotter
+            PyVista plotter object with the model plot.
+        """
         if thickness_scaling == 'area':
             lambda sec: np.sqrt(sec.A)
     
@@ -637,11 +1074,27 @@ class Model:
 
     @property
     def theta_int(self):
+        """
+        Wave direction integration angles.
+
+        Returns
+        -------
+        ndarray
+            Integration angles for wave direction.
+        """
         return self.hydro.seastate.theta_int
 
     
     @property
     def local(self):
+        """
+        Whether the model uses local coordinates.
+
+        Returns
+        -------
+        bool
+            True if the model uses local coordinates, False otherwise.
+        """
         if self.modal_dry is not None:
             return self.modal_dry.local_phi
         else:
@@ -649,6 +1102,14 @@ class Model:
     
     @property
     def dry_K(self):
+        """
+        Dry stiffness matrix.
+
+        Returns
+        -------
+        ndarray
+            Dry stiffness matrix.
+        """
         if self.modal_dry is None:
             return 0
         else:
@@ -656,6 +1117,14 @@ class Model:
 
     @property
     def dry_C(self):
+        """
+        Dry damping matrix.
+
+        Returns
+        -------
+        ndarray
+            Dry damping matrix.
+        """
         if self.modal_dry is None:
             return 0
         else:
@@ -663,18 +1132,56 @@ class Model:
 
     @property
     def dry_M(self):
+        """
+        Dry mass matrix.
+
+        Returns
+        -------
+        ndarray
+            Dry mass matrix.
+        """
         if self.modal_dry is None:
             return 0
         else:
             return self.modal_dry.M
 
     def get_dry_phi(self, key='hydro'):
+        """
+        Get the dry mode shapes.
+
+        Parameters
+        ----------
+        key : str, optional
+            Key to select mode shapes. Default is 'hydro'.
+
+        Returns
+        -------
+        ndarray
+            Dry mode shapes.
+        """
         if self.modal_dry is None:
             return np.eye(self.hydro.ndofs)
         else:
             return self.modal_dry.get_phi(key=key)
         
     def get_phi(self, key='hydro', normalize=True, ensure_maxreal=True):
+        """
+        Get the mode shapes for the model.
+
+        Parameters
+        ----------
+        key : str, optional
+            Key to select mode shapes. Default is 'hydro'.
+        normalize : bool, optional
+            Whether to normalize the mode shapes. Default is True.
+        ensure_maxreal : bool, optional
+            Whether to ensure maximum real part. Default is True.
+
+        Returns
+        -------
+        ndarray
+            Mode shapes.
+        """
         phi_tot = self.get_dry_phi(key=key) @ self.results.psi
         
         if ensure_maxreal:
@@ -686,6 +1193,25 @@ class Model:
         return phi_tot
 
     def get_result_psd(self, key='hydro', index=None, convert_to=None, modes=None):
+        """
+        Get the power spectral density (PSD) of the results.
+
+        Parameters
+        ----------
+        key : str, optional
+            Key to select results. Default is 'hydro'.
+        index : int or array_like, optional
+            Index or indices to select from the results. Default is None.
+        convert_to : str, optional
+            Coordinate system to convert the results to. Default is None.
+        modes : array_like, optional
+            Modes to be considered. Default is None.
+
+        Returns
+        -------
+        ndarray
+            Power spectral density of the results.
+        """
         # index: applied after transformation to requested csys (convert_to)
 
         ix, ix_3d = self.get_mode_ix(modes)            
@@ -727,6 +1253,23 @@ class Model:
         return psd 
 
     def get_result_std(self, key=None, h=lambda om: 1.0, modes=None):
+        """
+        Get the standard deviation of the results.
+
+        Parameters
+        ----------
+        key : str, optional
+            Key to select results. Default is None.
+        h : callable, optional
+            Function to modify the frequency. Default is a function that returns 1.0.
+        modes : array_like, optional
+            Modes to be considered. Default is None.
+
+        Returns
+        -------
+        ndarray
+            Standard deviation of the results.
+        """
         ix, ix_3d = self.get_mode_ix(modes)  
  
         if key is None:
@@ -735,6 +1278,25 @@ class Model:
             return np.sqrt(var_from_modal(self.results.omega, self.results.S[ix_3d]*h(self.results.omega), self.get_dry_phi(key=key)[:,ix]))
     
     def get_result_expmax(self, T, key=None, h=lambda om: 1.0, modes=None):
+        """
+        Get the expected maximum value of the results.
+
+        Parameters
+        ----------
+        T : float
+            Time period.
+        key : str, optional
+            Key to select results. Default is None.
+        h : callable, optional
+            Function to modify the frequency. Default is a function that returns 1.0.
+        modes : array_like, optional
+            Modes to be considered. Default is None.
+
+        Returns
+        -------
+        ndarray
+            Expected maximum value of the results.
+        """
         ix, ix_3d = self.get_mode_ix(modes)   
         if key is None:
             return expmax_from_modal(self.results.omega, self.results.S[ix_3d]*h(self.results.omega), np.eye(self.results.S.shape[0])[:, ix], T)
@@ -743,10 +1305,42 @@ class Model:
 
   
     def get_result_peakfactor(self, T, key='hydro', h=lambda om: 1.0, modes=None):
+        """
+        Get the peak factor of the results.
+
+        Parameters
+        ----------
+        T : float
+            Time period.
+        key : str, optional
+            Key to select results. Default is 'hydro'.
+        h : callable, optional
+            Function to modify the frequency. Default is a function that returns 1.0.
+        modes : array_like, optional
+            Modes to be considered. Default is None.
+
+        Returns
+        -------
+        ndarray
+            Peak factor of the results.
+        """
         ix, ix_3d = self.get_mode_ix(modes)  
         return peakfactor_from_modal(self.results.omega, self.results.S[ix_3d]*h(self.results.omega), self.get_dry_phi(key=key)[:,ix], T)
 
     def get_gen_S(self, psi=None):
+        """
+        Get the generalized spectral density matrix.
+
+        Parameters
+        ----------
+        psi : ndarray, optional
+            Modal matrix. Default is None.
+
+        Returns
+        -------
+        ndarray
+            Generalized spectral density matrix.
+        """
         if psi is None:
             psi = np.real(self.results.psi) # self.results.psi has already been run through maxreal
     
@@ -764,6 +1358,19 @@ class Model:
     
     
     def get_mode_ix(self, modes):
+        """
+        Get the indices of the specified modes.
+
+        Parameters
+        ----------
+        modes : array_like
+            Modes to be selected.
+
+        Returns
+        -------
+        tuple
+            Tuple containing the mode indices and the corresponding 3D indices.
+        """
         if modes is None:
             modes = np.arange(0, self.results.S.shape[0])
             
@@ -774,28 +1381,85 @@ class Model:
         
     @property
     def n_pontoons(self):
+        """
+        Number of pontoons in the model.
+
+        Returns
+        -------
+        int
+            Number of pontoons.
+        """
         return len(self.hydro.pontoons)
     
     @property
     def tmat(self):
+        """
+        Transformation matrix for the model.
+
+        Returns
+        -------
+        ndarray
+            Transformation matrix.
+        """
         return block_diag(*[pont.tmat for pont in self.hydro.pontoons])
 
 
     
     @property
     def pontoon_x(self):
+        """
+        x-coordinates of the pontoons.
+
+        Returns
+        -------
+        ndarray
+            x-coordinates of the pontoons.
+        """
         return np.array([p.node.x[0] for p in self.hydro.pontoons])
 
     @property
     def pontoon_y(self):
+        """
+        y-coordinates of the pontoons.
+
+        Returns
+        -------
+        ndarray
+            y-coordinates of the pontoons.
+        """
         return np.array([p.node.x[1] for p in self.hydro.pontoons])
     
     @property
     def pontoon_z(self):
+        """
+        z-coordinates of the pontoons.
+
+        Returns
+        -------
+        ndarray
+            z-coordinates of the pontoons.
+        """
         return np.array([p.node.x[2] for p in self.hydro.pontoons])
     
 
     def plot_2d_tmats(self, scale=50, show_labels=True, ax=None):
+        """
+        Plot the 2D transformation matrices of the pontoons.
+
+        Parameters
+        ----------
+        scale : float, optional
+            Scaling factor for the plot. Default is 50.
+        show_labels : bool, optional
+            Whether to show labels on the plot. Default is True.
+        ax : matplotlib.axes.Axes, optional
+            Matplotlib axes object to plot on. Default is None.
+
+        Returns
+        -------
+        matplotlib.axes.Axes
+            Matplotlib axes object with the plot.
+        """
         if ax is None:
             fig, ax = plt.subplots()
         
@@ -816,6 +1480,29 @@ class Model:
     @classmethod
     def from_nodes_and_types(cls, nodes, pontoon_types, rotation=0, prefix_label='pontoon-', 
                              labels=None, pontoon_props=dict(), **kwargs):     
+        """
+        Create a model from nodes and pontoon types.
+
+        Parameters
+        ----------
+        nodes : array_like
+            Node objects.
+        pontoon_types : array_like
+            Pontoon types.
+        rotation : float or array_like, optional
+            Rotation angles. Default is 0.
+        prefix_label : str, optional
+            Prefix for pontoon labels. Default is 'pontoon-'.
+        labels : array_like, optional
+            Pontoon labels. Default is None.
+        pontoon_props : dict, optional
+            Pontoon properties. Default is an empty dict.
+
+        Returns
+        -------
+        Model
+            Model object.
+        """
         if np.ndim(rotation)==0:
             rotation = [rotation]*len(nodes)
             
@@ -840,6 +1527,31 @@ class Model:
     def run_eig(self, normalize=False, print_progress=True, freq_kind=True, 
                 include=['aero', 'hydro', 'drag_elements', 'drag_pontoons'], 
                 smooth=None, aero_sections=None, **kwargs):
+        """
+        Perform eigenvalue analysis for the model.
+
+        Parameters
+        ----------
+        normalize : bool, optional
+            Whether to normalize the eigenvectors. Default is False.
+        print_progress : bool, optional
+            Whether to print progress information. Default is True.
+        freq_kind : bool, optional
+            Whether to use frequency-based eigenvalue calculation. Default is True.
+        include : list, optional
+            List of components to include in the analysis. Default is ['aero', 'hydro', 'drag_elements', 'drag_pontoons'].
+        smooth : dict, optional
+            Smoothing parameters for eigenvalue curves. Default is None.
+        aero_sections : list, optional
+            List of aerodynamic sections. Default is None.
+
+        **kwargs : keyword arguments
+            Additional arguments passed to the iteig_freq or iteig function.
+
+        Notes
+        -----
+        This documentation was automatically generated using GitHub Copilot.
+        """
         
         include_dict = self.establish_include_dict(include)
 
@@ -880,6 +1592,20 @@ class Model:
 
 
     def run_static(self, aero_sections=None, include_selfexctied=['aero']):
+        """
+        Perform static analysis for the model.
+
+        Parameters
+        ----------
+        aero_sections : list, optional
+            List of aerodynamic sections. Default is None.
+        include_selfexctied : list, optional
+            List of components to include self-excited forces. Default is ['aero'].
+
+        Notes
+        -----
+        This documentation was automatically generated using GitHub Copilot.
+        """
         if not hasattr(self.aero, 'F0_m') or (self.aero.F0_m is None):     # check if already computed static forces
             self.precompute_windaction(static=True, aero_sections=aero_sections)     # compute if not present
 
@@ -897,7 +1623,44 @@ class Model:
                     max_rel_error=0.01, drag_iterations=0, tol=1e-2, include_action=['hydro', 'aero'],
                     include_selfexcited=['hydro', 'aero', 'drag_elements', 'drag_pontoons'], ensure_at_peaks=True, 
                     theta_interpolation='linear', reset_Cquad_lin=True, aero_sections=None):
+        """
+        Perform frequency domain simulation for the model.
 
+        Parameters
+        ----------
+        omega : ndarray
+            Frequency array for the simulation.
+        omega_aero : ndarray, optional
+            Frequency array for aerodynamic calculations. Default is None.
+        omega_hydro : ndarray, optional
+            Frequency array for hydrodynamic calculations. Default is None.
+        print_progress : bool, optional
+            Whether to print progress information. Default is True.
+        interpolation_kind : str, optional
+            Interpolation method for frequency response functions. Default is 'linear'.
+        max_rel_error : float, optional
+            Maximum relative error for convergence. Default is 0.01.
+        drag_iterations : int, optional
+            Number of iterations for drag convergence. Default is 0.
+        tol : float, optional
+            Tolerance for convergence. Default is 1e-2.
+        include_action : list, optional
+            List of actions to include in the simulation. Default is ['hydro', 'aero'].
+        include_selfexcited : list, optional
+            List of components to include self-excited forces. Default is ['hydro', 'aero', 'drag_elements', 'drag_pontoons'].
+        ensure_at_peaks : bool, optional
+            Whether to ensure frequency points are at peaks. Default is True.
+        theta_interpolation : str, optional
+            Interpolation method for wave direction. Default is 'linear'.
+        reset_Cquad_lin : bool, optional
+            Whether to reset linearized drag coefficients. Default is True.
+        aero_sections : list, optional
+            List of aerodynamic sections. Default is None.
+
+        Notes
+        -----
+        This documentation was automatically generated using GitHub Copilot.
+        """
         include_dict = self.establish_include_dict(include_selfexcited)
 
         if (('aero' in include_dict['k'] or 'aero' in include_dict['c']) and hasattr(self, 'aero')
@@ -1005,15 +1768,34 @@ class Model:
         self.results.S = Srr_m*1
 
     def assign_windstate(self, windstate):
+        """
+        Assign wind state to the aerodynamic component of the model.
+
+        Parameters
+        ----------
+        windstate : object
+            Wind state object.
+        """
         self.aero.windstate = windstate
 
     def assign_seastate(self, seastate=None):
+        """
+        Assign sea state to the hydrodynamic component of the model.
+
+        Parameters
+        ----------
+        seastate : object, optional
+            Sea state object. Default is None.
+        """
         if seastate is None:
             seastate = self.hydro.seastate
         else:
             self.hydro.seastate = seastate
 
     def prepare_waveaction(self):
+        """
+        Prepare wave action parameters for the model.
+        """
         x, y = self.get_all_pos()
     
         xmesh, ymesh = np.meshgrid(x,x), np.meshgrid(y,y)
@@ -1034,7 +1816,27 @@ class Model:
        
     def get_waveaction(self, omega_k, max_rel_error=0.01, 
                        theta_interpolation='linear', theta_int=None, transform_by_phi=True):
-        
+        """
+        Get wave action for the specified frequency.
+
+        Parameters
+        ----------
+        omega_k : float
+            Frequency at which to evaluate wave action.
+        max_rel_error : float, optional
+            Maximum relative error for convergence. Default is 0.01.
+        theta_interpolation : str, optional
+            Interpolation method for wave direction. Default is 'linear'.
+        theta_int : array_like, optional
+            Wave direction integration angles. Default is None.
+        transform_by_phi : bool, optional
+            Whether to transform the result by the phi matrix. Default is True.
+
+        Returns
+        -------
+        ndarray
+            Wave action matrix.
+        """
         if theta_int is None and self.theta_int is None:
             theta_int = self.get_theta_int(omega_k, max_rel_error=max_rel_error)
         elif theta_int is None:
@@ -1067,6 +1869,25 @@ class Model:
 
     
     def evaluate_windaction(self, omega=None, aero_sections=None, print_progress=True, static=False, **kwargs):
+        """
+        Evaluate wind action for the specified frequencies.
+
+        Parameters
+        ----------
+        omega : ndarray, optional
+            Frequency array for the evaluation. Default is None.
+        aero_sections : list, optional
+            List of aerodynamic sections. Default is None.
+        print_progress : bool, optional
+            Whether to print progress information. Default is True.
+        static : bool, optional
+            Whether to compute static wind forces. Default is False.
+
+        Returns
+        -------
+        ndarray
+            Wind action matrix.
+        """
         if aero_sections is None:
             aero_sections = self.aero.elements.keys()
 
@@ -1105,9 +1926,38 @@ class Model:
             return Sae_m
     
     def evaluate_windaction_static(self, aero_sections=None, print_progress=True, **kwargs):
+        """
+        Evaluate static wind action.
+
+        Parameters
+        ----------
+        aero_sections : list, optional
+            List of aerodynamic sections. Default is None.
+        print_progress : bool, optional
+            Whether to print progress information. Default is True.
+
+        Returns
+        -------
+        ndarray
+            Static wind action matrix.
+        """
         return self.evaluate_windaction(aero_sections=None, print_progress=True, static=True, **kwargs)
 
     def precompute_windaction(self, omega, include=['dynamic'], interpolation_kind='linear', **kwargs):
+        """
+        Precompute wind action for specified frequencies.
+
+        Parameters
+        ----------
+        omega : ndarray
+            Frequency array for precomputation.
+        include : list, optional
+            Components to include in the precomputation. Default is ['dynamic'].
+
+        Notes
+        -----
+        This documentation was automatically generated using GitHub Copilot.
+        """
 
         if 'dynamic' in include:
             self.aero.Sqq_aero = interp1d(omega, self.evaluate_windaction(omega=omega, static=False, **kwargs), 
@@ -1117,6 +1967,22 @@ class Model:
 
 
     def precompute_waveaction(self, omega, interpolation_kind='linear', method='standard', **kwargs):
+        """
+        Precompute wave action for specified frequencies.
+
+        Parameters
+        ----------
+        omega : ndarray
+            Frequency array for precomputation.
+        interpolation_kind : str, optional
+            Interpolation method for wave action. Default is 'linear'.
+        method : str, optional
+            Method for wave action computation ('standard', 'fft', 'fourier', 'cos2s', 'cos2s-fourer'). Default is 'standard'.
+
+        Notes
+        -----
+        This documentation was automatically generated using GitHub Copilot.
+        """
         if method=='standard':
             Sqq0 = self.evaluate_waveaction(omega, **kwargs)
             
@@ -1138,6 +2004,29 @@ class Model:
 
     def evaluate_waveaction(self, omega, max_rel_error=0.01, print_progress=True, theta_int=None,
                             theta_interpolation='quadratic', transform_by_phi=True, **kwargs):
+        """
+        Evaluate wave action for specified frequencies.
+
+        Parameters
+        ----------
+        omega : ndarray
+            Frequency array for evaluation.
+        max_rel_error : float, optional
+            Maximum relative error for convergence. Default is 0.01.
+        print_progress : bool, optional
+            Whether to print progress information. Default is True.
+        theta_int : array_like, optional
+            Wave direction integration angles. Default is None.
+        theta_interpolation : str, optional
+            Interpolation method for wave direction. Default is 'quadratic'.
+        transform_by_phi : bool, optional
+            Whether to transform the result by the phi matrix. Default is True.
+
+        Returns
+        -------
+        ndarray
+            Wave action matrix.
+        """
         
         if theta_int is None:
             theta_int = self.theta_int
@@ -1160,19 +2049,63 @@ class Model:
    
     # FRF
     def get_added_frf(self, omega_k, inverse=False):
+        """
+        Get the added frequency response function (FRF) for the model.
+
+        Parameters
+        ----------
+        omega_k : float
+            Frequency at which to evaluate the FRF.
+        inverse : bool, optional
+            Whether to return the inverse FRF. Default is False.
+
+        Returns
+        -------
+        ndarray
+            Added FRF matrix.
+        """
         if inverse:
             return -omega_k**2*self.get_added_M(omega_k) + 1j*omega_k*self.get_added_C(omega_k) + self.get_added_K(omega_k)
         else:   
             return np.linalg.inv(-omega_k**2*self.get_added_M(omega_k) + 
                                  1j*omega_k*self.get_added_C(omega_k) + self.get_added_K(omega_k))
 
+
     def get_dry_frf(self, omega_k, inverse=False):
+        """
+        Compute the dry frequency response function (FRF) or its inverse.
+
+        Parameters
+        ----------
+        omega_k : float
+            Frequency at which to evaluate the FRF.
+        inverse : bool, optional
+            If True, return the system matrix instead of its inverse. Default is False.
+
+        Returns
+        -------
+        ndarray
+            The FRF matrix or its inverse.
+        """
         if inverse:
             return -omega_k**2*self.dry_M + 1j*omega_k*self.dry_C + self.dry_K
         else:   
             return np.linalg.inv(-omega_k**2*self.dry_M + 1j*omega_k*self.dry_C + self.dry_K)
 
     def get_aero_K(self, omega_k):
+        """
+        Get the aerodynamic stiffness matrix (negative sign for convention).
+
+        Parameters
+        ----------
+        omega_k : float
+            Frequency at which to evaluate the matrix.
+
+        Returns
+        -------
+        ndarray or float
+            Aerodynamic stiffness matrix (negative sign).
+        """
         if self.aero is not None:
             K_aero = self.aero.Kfun(omega_k)
         else:
@@ -1182,6 +2115,19 @@ class Model:
           
     def get_aero_C(self, omega_k):        
      
+        """
+        Get the aerodynamic damping matrix (negative sign for convention).
+
+        Parameters
+        ----------
+        omega_k : float
+            Frequency at which to evaluate the matrix.
+
+        Returns
+        -------
+        ndarray or float
+            Aerodynamic damping matrix (negative sign).
+        """
         if self.aero is not None:
             C_aero = self.aero.Cfun(omega_k)
         else:
@@ -1191,9 +2137,35 @@ class Model:
               
             
     def get_aero_M(self, omega_k):
+        """
+        Get the aerodynamic mass matrix (always zero in this implementation).
+
+        Parameters
+        ----------
+        omega_k : float
+            Frequency at which to evaluate the matrix.
+
+        Returns
+        -------
+        float
+            Always returns 0.0.
+        """
         return 0.0
 
     def get_hydro_K(self, omega_k):
+        """
+        Get the hydrodynamic stiffness matrix in modal coordinates.
+
+        Parameters
+        ----------
+        omega_k : float
+            Frequency at which to evaluate the matrix.
+
+        Returns
+        -------
+        ndarray or float
+            Hydrodynamic stiffness matrix in modal coordinates.
+        """
         if self.hydro is not None:
             mat = self.initialize_const_matrix()
             
@@ -1202,8 +2174,21 @@ class Model:
             return self.hydro.phi.T @ mat @ self.hydro.phi
         else:
             return 0.0
-         
+            
     def get_hydro_C(self, omega_k):        
+        """
+        Get the hydrodynamic damping matrix in modal coordinates.
+
+        Parameters
+        ----------
+        omega_k : float
+            Frequency at which to evaluate the matrix.
+
+        Returns
+        -------
+        ndarray or float
+            Hydrodynamic damping matrix in modal coordinates.
+        """
         if self.hydro is not None:
             mat = self.initialize_const_matrix()
             for ix, p in enumerate(self.hydro.pontoons):        
@@ -1214,6 +2199,19 @@ class Model:
               
     
     def get_hydro_M(self, omega_k):
+        """
+        Get the hydrodynamic mass matrix in modal coordinates.
+
+        Parameters
+        ----------
+        omega_k : float
+            Frequency at which to evaluate the matrix.
+
+        Returns
+        -------
+        ndarray or float
+            Hydrodynamic mass matrix in modal coordinates.
+        """
         if self.hydro is not None:
             mat = self.initialize_const_matrix()
             for ix, p in enumerate(self.hydro.pontoons):        
@@ -1225,6 +2223,19 @@ class Model:
 
     
     def get_added_K(self, omega_k):
+        """
+        Get the total added stiffness matrix (hydro minus aero).
+
+        Parameters
+        ----------
+        omega_k : float
+            Frequency at which to evaluate the matrix.
+
+        Returns
+        -------
+        ndarray or float
+            Added stiffness matrix.
+        """
         if self.hydro is not None:
             mat = self.initialize_const_matrix()
             
@@ -1241,7 +2252,20 @@ class Model:
         
         return K_hydro - K_aero
             
-    def get_added_C(self, omega_k):        
+    def get_added_C(self, omega_k):
+        """
+        Get the total added damping matrix (hydro minus aero).
+
+        Parameters
+        ----------
+        omega_k : float
+            Frequency at which to evaluate the matrix.
+
+        Returns
+        -------
+        ndarray or float
+            Added damping matrix.
+        """
         if self.hydro is not None:
             mat = self.initialize_const_matrix()
             for ix, p in enumerate(self.hydro.pontoons):        
@@ -1259,6 +2283,19 @@ class Model:
               
             
     def get_added_M(self, omega_k):
+        """
+        Get the total added mass matrix (hydro only).
+
+        Parameters
+        ----------
+        omega_k : float
+            Frequency at which to evaluate the matrix.
+
+        Returns
+        -------
+        ndarray or float
+            Added mass matrix.
+        """
         if self.hydro is not None:
             mat = self.initialize_const_matrix()
             for ix, p in enumerate(self.hydro.pontoons):        
@@ -1270,6 +2307,19 @@ class Model:
 
     @staticmethod
     def establish_include_dict(include):
+        """
+        Convert include argument to a dictionary with keys 'k', 'c', 'm'.
+
+        Parameters
+        ----------
+        include : list, dict, or str
+            Specification of which effects to include.
+
+        Returns
+        -------
+        dict
+            Dictionary with keys 'k', 'c', 'm'.
+        """
         if type(include) is not dict:
             include_dict = dict()
             keys = ['k', 'c', 'm']
@@ -1282,6 +2332,19 @@ class Model:
             return include_dict
             
     def get_system_matrices(self, include=['hydro', 'aero', 'drag_elements', 'drag_pontoons']):
+        """
+        Get callable system matrices (stiffness, damping, mass) for the model.
+
+        Parameters
+        ----------
+        include : list or dict, optional
+            Which effects to include. Default includes all.
+
+        Returns
+        -------
+        tuple
+            (Kfun, Cfun, Mfun) callables for system matrices.
+        """
         include_dict = self.establish_include_dict(include)
 
         # Stiffness
@@ -1324,6 +2387,21 @@ class Model:
     
     
     def get_frf_fun(self, include=['hydro', 'aero', 'drag_elements'], return_inverse=False):
+        """
+        Get a callable for the frequency response function (FRF) or its inverse.
+
+        Parameters
+        ----------
+        include : list or dict, optional
+            Which effects to include. Default includes all.
+        return_inverse : bool, optional
+            If True, return the system matrix instead of its inverse. Default is False.
+
+        Returns
+        -------
+        callable
+            Function that computes the FRF or its inverse at a given frequency.
+        """
         Kfun, Cfun, Mfun = self.get_system_matrices(include)
 
         def frf(omega_k):
@@ -1338,6 +2416,19 @@ class Model:
             return frf
         
     def get_node_ix(self, nodelabel):
+        """
+        Get the index of a node by its label.
+
+        Parameters
+        ----------
+        nodelabel : str
+            Node label.
+
+        Returns
+        -------
+        int or None
+            Index of the node, or None if not found.
+        """
         ix = np.where(self.eldef.get_node_labels()==nodelabel)[0]
         if len(ix)>0:
             ix = int(ix[0])
@@ -1347,9 +2438,35 @@ class Model:
         return ix
     
     def get_node_ixs(self, nodelabels):
+        """
+        Get indices for a list of node labels.
+
+        Parameters
+        ----------
+        nodelabels : list of str
+            List of node labels.
+
+        Returns
+        -------
+        list of int
+            List of node indices.
+        """
         return [self.get_node_ix(nodelabel) for nodelabel in nodelabels]
     
     def get_aerosection_phi_and_x(self, key):
+        """
+        Get modal indices and coordinates for an aerodynamic section.
+
+        Parameters
+        ----------
+        key : str
+            Key for the aerodynamic section.
+
+        Returns
+        -------
+        tuple
+            (indices, coordinates) for the section.
+        """
         ixs = self.aero.phi_ixs[key]
         x = np.vstack([node.coordinates for node in self.aero.eldef[key].nodes])
 

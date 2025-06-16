@@ -183,6 +183,9 @@ def get_nodal_phi(step_obj, nodes, field_outputs=['U', 'UR'], flatten_components
 
 
 def get_element_phi(step_obj, elements, field_outputs=['SF', 'SM'], flatten_components=True, return_integration_points=False):
+    if return_integration_points:
+        raise NotImplementedError('return_integration_points is not implemented for element phi extraction')
+    
     if step_obj.domain != MODAL:   #MODAL is a variable in abaqusConstants
         raise TypeError('Type of input step is not modal!')
 
@@ -196,19 +199,15 @@ def get_element_phi(step_obj, elements, field_outputs=['SF', 'SM'], flatten_comp
         n_dofs[field_output] = len(foobj0.values[0].data)
 
         # Get correct data indices to get correct order (as given in node_labels)
-        all_integration_points = [value.integrationPoint for value in foobj0.values]
-
         n_int = len(elements) # number of integration points (same element label might appear multiple times if multiple integration points in element)
-        phio = np.zeros([n_dofs[field_output]*n_int, n_modes])        
-
-        data_indices = [None]*n_int
+        phio = np.zeros([n_dofs[field_output]*n_int, n_modes])   
+        phio = [None]*n_modes    
         
         for mode in range(0, n_modes):
             foobj = step_obj.frames[mode+1].fieldOutputs[field_output]
-            phio[:, mode] = np.array([foobj.getSubset(region=el)[0].data for el in elements]).flatten()
+            phio[mode] = np.array([foobj.getSubset(region=el).values[0].data for el in elements]).flatten()
 
-        integration_points[field_output] = [all_integration_points[ix] for ix in data_indices]
-        phi[field_output] = phio*1
+        phi[field_output] = np.vstack(phio).T
     
     if flatten_components:
         phi_merged = [None]*n_modes
@@ -216,16 +215,9 @@ def get_element_phi(step_obj, elements, field_outputs=['SF', 'SM'], flatten_comp
         for mode in range(n_modes):
             phi_merged[mode] = np.hstack([np.array(phi[key][:, mode]).reshape([-1,n_dofs[key]]) for key in field_outputs]).flatten()
             
-        integration_points = np.hstack([np.array(integration_points[key]).reshape([-1,n_dofs[key]]) for key in field_outputs]).flatten()
         phi = np.vstack(phi_merged).T
 
-
-    if return_integration_points:
-        return phi, integration_points
-    else:
-        return phi
-
-    return phi, integration_points
+    return phi
 
 
 def get_modal_parameters(frequency_step):

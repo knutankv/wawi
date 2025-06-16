@@ -534,3 +534,39 @@ def expmax_from_modal(omega, S, phi, T, only_diagonal=True):
         
     return expmax
 
+
+def get_normal_stress_psd(S, A=np.inf, Iy=np.inf, Iz=np.inf, y=0.0, z=0.0):
+    '''
+    Calculate the normal stress PSD from the force and moment PSD.
+    
+    Parameters
+    ----------
+    S : ndarray
+            The force and moment PSD matrix (3-by-3-by-n_freq).
+    A : float, optional
+        The area of the cross-section (default is infinity).
+    Iy : float, optional
+        The second moment of area about the y-axis (default is infinity).
+    Iz : float, optional
+        The second moment of area about the z-axis (default is infinity).
+
+    Returns
+    -------
+    S_normal : ndarray
+            The normal stress PSD matrix (3-by-3-by-n_freq).
+    
+    Notes
+    -----
+    The normal stress PSD is calculated using the formula:
+    .. math::
+        S_{\\sigma} = [T_\\sigma]^T [S_F] [T_\\sigma]
+
+    where :math:`S_{F}` is the force/moment PSD based on ordering N, My, Mz and [T_\\sigma] is defined
+    as [T_\\sigma] = [1/A, dz/Iy, dy/Iz].
+
+    '''
+
+    T_sigma = np.array([[1/A, z/Iy, y/Iz]])
+    S_sigma = transform_3dmat(S, T_sigma.T)[0,0,:].real
+
+    return S_sigma
