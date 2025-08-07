@@ -184,7 +184,6 @@ def expmax(T, v0, std):
 
     Notes
     -----
-    This function relies on an external function `peakfactor` which should be defined elsewhere.
     Docstring is generated using Github Copilot.
 
     Examples
