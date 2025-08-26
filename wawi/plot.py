@@ -5,7 +5,7 @@ from wawi.wave import dispersion_relation_scalar as get_kappa
 from scipy.ndimage import rotate, shift
 from matplotlib import transforms
 from scipy.interpolate import RectBivariateSpline, interp1d
-
+from wawi.general import get_coherency_matrix
 
 def plot_ads(ad_dict, v, terms='stiffness', num=None, test_v=dict(), test_ad=dict(), zasso_type=False, ranges=None):
     """
@@ -866,3 +866,98 @@ def plot_S2d(S, omega, theta, D=None, omega_range=None, theta_range=None):
         fig.subplots_adjust(top=0.97, bottom=0.08, left=0.16, right=0.97)
     
     return fig
+
+def plot_cpsd(S, omega, plots=['complex'], settings={}, xlabel='$\omega$ [rad/s]', matrix_name='S'):
+    """
+    Plot cross-power spectral density (CPSD) matrix.
+
+    Parameters
+    ----------
+    S : ndarray
+        3D array representing the CPSD matrix (Ndofs x Ndofs x Nfreqs).
+    omega : array_like
+        1D array of angular frequency values.
+    fig : matplotlib.figure.Figure, optional
+        Existing figure to plot on. If None, a new figure is created.
+    plots : {'complex', 'imag', 'real', 'magnitude', 'phase'}, optional
+        Type of plot to generate:
+        - 'real': Plots real parts.
+        - 'imag': Plots imag parts.
+        - 'complex': Plots both real and imaginary parts.
+        - 'magnitude': Plots the magnitude.
+        - 'phase': Plots the phase angle.
+
+        Default is 'complex'.
+    settings 
+
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+        The matplotlib Figure object containing the plots.
+
+    Notes
+    -----
+    
+    """
+
+    settings = {'imag': dict(color='indianred', linestyle='-', label=f'Im({matrix_name})'),
+                'real': dict(color='dodgerblue', linestyle='-', label=f'Re({matrix_name})'),
+                'phase': dict(color='mediumseagreen', linestyle='-', label=f'$\\angle {matrix_name}$'),
+                'magnitude': dict(color='black', linestyle='-', label=f'|{matrix_name}|')} | settings
+    
+
+    if 'complex' in plots:
+        if 'imag' not in plots:
+            plots.append('imag')
+        if 'real' not in plots:
+            plots.append('real')    
+        plots.remove('complex')
+
+
+    S_plot = dict()
+    if 'real' in plots:
+        S_plot['real'] = np.real(S)
+    if 'imag' in plots:
+        S_plot['imag'] = np.imag(S)
+    if 'phase' in plots:
+        S_plot['phase'] = np.angle(S)    
+    if 'magnitude' in plots:
+        S_plot['magnitude'] = np.abs(S)
+
+    # Order dict
+    S_plot = {key: S_plot[key] for key in plots if key in S_plot}
+
+    fig, ax = plt.subplots(nrows=S.shape[0], ncols=S.shape[1], sharex=True, figsize=(12,10))
+
+    for i in range(S.shape[0]):
+        for j in range(S.shape[1]):
+            for key in S_plot:
+                ax[i,j].plot(omega, S_plot[key][i,j,:], **settings[key])
+
+            ax[i,j].grid(True)
+
+    for i in range(S.shape[0]):
+        ax[i,0].set_ylabel(i+1)
+    
+    for j in range(S.shape[1]):
+        ax[0,j].set_title(j+1, fontsize=10)
+    
+    for j in range(S.shape[1]):
+        ax[-1,j].set_xlabel(xlabel)
+
+    fig.tight_layout()
+
+    # Establish legend
+    handles, labels = [], []
+    for ax in fig.axes:
+        for h, l in zip(*ax.get_legend_handles_labels()):
+            if l not in labels: # Avoid duplicate labels in the legend
+                handles.append(h)
+                labels.append(l)
+
+    fig.legend(handles, labels, loc='upper center', 
+                ncol=len(labels), frameon=False)
+    
+    fig.subplots_adjust(top=0.9)
+
+    return fig, ax

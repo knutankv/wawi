@@ -1,4 +1,6 @@
 import numpy as np
+from scipy.stats import norm
+
 def zero_crossing_period(S, omega):
     """
     Estimate the zero-crossing period from a spectrum.
@@ -251,3 +253,56 @@ def peakfactor_from_spectrum(S, omega, T):
     """
 
     return peakfactor(T, v0(S, omega))
+
+
+def expmax_from_cpsd(S, omega, T, comp_ix, percentile=0.5):
+    """
+    Estimate the expected maximum value for a multi-degree-of-freedom (MDOF) system.
+
+    Parameters
+    ----------
+    S : ndarray
+        Cross-spectral density matrix (Ndofs x Ndofs x Nfreqs).
+    omega : array_like
+        Angular frequency values.
+    T : float
+        Duration or time interval over which the expected maximum is calculated.
+    comp_ix : int
+        Index of the component for which the expected maximum is being calculated.
+    percentile : float, optional
+        Percentile value for the corresponding components (default is 0.5 --> expected values).
+
+    Returns
+    -------
+    ndarray
+        Array of expected maximum values for all components.
+
+    Notes
+    -----
+    Docstring is generated using Github Copilot.
+    """
+    S_ii = np.real(S[comp_ix, comp_ix, :]) # chosen auto PSD
+     
+    maxval_i = expmax_from_spectrum(S_ii, omega, T)
+    
+    R = np.trapz(np.real(S), omega)     # covariance matrix
+        
+    # Extract variance (element) and entire column of covariance matrix corresponding to the chosen component
+    R_ii = R[comp_ix, comp_ix]                  # chosen component of covariance matrix / variance of component
+    r_i = R[:, comp_ix:comp_ix+1]
+
+    # Conditional statistics
+    R_cond = R - 1/R_ii * (r_i @ r_i.T)  # conditional covariance given max_val in chosen component
+    std_cond = np.sqrt(np.diag(R_cond))                 # conditional standard deviations of all components
+    mean_cond_max = (maxval_i * r_i / R_ii).flatten()
+
+    std_cond[np.isnan(std_cond)] = 0.0  # R_cond = 0.0 on diagonal for terms perfectly correlated
+
+    # Final computation of percentile value
+    z_p = norm.ppf(percentile)    # establish z score
+    expmax_all = mean_cond_max + z_p*std_cond
+    
+    return expmax_all    
+    
+    
+    

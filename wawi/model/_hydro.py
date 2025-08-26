@@ -910,7 +910,7 @@ class PontoonType:
     original_omega, original_omegaQ : array_like or None
         Frequencies for hydrodynamic data.
     theta : array_like or None
-        Wave directions.
+        Wave directions in radians.
     label : str, optional
         Label for the pontoon type. Default is 'unnamed'.
     Cd : array_like, optional

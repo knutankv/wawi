@@ -23,12 +23,15 @@ classifiers = [
 ]
 dynamic = ["version"]
 dependencies = ["plotly", "pandas", "numpy", "pyvista[jupyter]>=0.38.1",
-                      "scikit-learn", "trame", "ipywidgets", "pyvistaqt",
-                      "beefpy"]
+                "scikit-learn", "trame", "ipywidgets", "pyvistaqt",
+                "beefpy"]
 
 
 [tool.setuptools.dynamic]
 version = {attr = "wawi.__version__"}
+
+[tool.setuptools.package-data]
+wawi = ["*.png"]
 
 [tool.setuptools.packages]
 find = {}

@@ -918,7 +918,7 @@ class Model:
              waterplane_padding=[1800, 1800], plot_wind_axes=True, wind_ax=[0],
              title=None, show=True, plot_wind_at_centre=True, axis_scaling=100, plot_states=['undeformed'],
              plot_wave_direction=True, wave_origin='center', pontoons_on=['deformed', 'undeformed'],
-             thickness_scaling=None, annotate_pontoon_type=False, **kwargs):
+             thickness_scaling=None, annotate_pontoon_type=False, show_logo=False, **kwargs):
         """
         Plot the model in 3D.
 
@@ -954,7 +954,8 @@ class Model:
             Scaling for the thickness of pontoons ('area' or None). Default is None.
         annotate_pontoon_type : bool, optional
             Whether to annotate pontoons with their type. Default is False.
-
+        show_logo : bool, optional
+            Whether to show the WAWI logo or not in the corner. Default is False.
         **kwargs : keyword arguments
             Additional arguments passed to the PyVista plotter.
 
@@ -965,7 +966,11 @@ class Model:
         """
         if thickness_scaling == 'area':
             lambda sec: np.sqrt(sec.A)
-    
+        
+        if show_logo:
+            import importlib
+            logo_path = importlib.resources.files('wawi').joinpath('wawi-logo.png')
+
         
         tmat_settings = dict(show_edges=False)
         tmat_colors = ['#ff0000', '#00ff00', '#0000ff']
@@ -973,7 +978,7 @@ class Model:
         if self.eldef is None:
             pl = pv.Plotter()
         else:
-            pl = self.eldef.plot(show=False, plot_states=plot_states,thickness_scaling=thickness_scaling, **kwargs)
+            pl = self.eldef.plot(show=False, plot_states=plot_states, thickness_scaling=thickness_scaling, **kwargs)
 
         bounds = np.array(pl.bounds)
         origin = (bounds[0::2] + bounds[1::2])/2
@@ -1066,6 +1071,9 @@ class Model:
         if title is not None:
             pl.add_title(title, color='black', font_size=12)
         
+        if show_logo:
+            pl.add_logo_widget(logo_path, position=[0.8, 0.025], size=[0.15, 0.1])
+
         if show:
             pl.show()
         
@@ -2034,7 +2042,7 @@ class Model:
         if transform_by_phi:
             ndofs = self.hydro.phi.shape[1]
         else:
-            ndofs = self.hydro.phi.shape[0]
+            ndofs = len(self.hydro.pontoons) * 6
         
         Sqq = np.zeros([ndofs, ndofs, len(omega)]).astype('complex')
 
