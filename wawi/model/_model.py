@@ -1260,7 +1260,7 @@ class Model:
             
         return psd 
 
-    def get_result_std(self, key=None, h=lambda om: 1.0, modes=None):
+    def get_result_std(self, key=None, h=lambda om: 1.0, modes=None, convert_to=None):
         """
         Get the standard deviation of the results.
 
@@ -1272,6 +1272,8 @@ class Model:
             Function to modify the frequency. Default is a function that returns 1.0.
         modes : array_like, optional
             Modes to be considered. Default is None.
+        convert_to : str, optional
+            Coordinate system to convert the results to. Default is None.
 
         Returns
         -------
@@ -1280,11 +1282,30 @@ class Model:
         """
         ix, ix_3d = self.get_mode_ix(modes)  
  
-        if key is None:
-            return np.sqrt(np.diag(np.trapz(np.real(self.results.S[ix_3d]*h(self.results.omega)), self.results.omega, axis=2)))
+        if key is not None:    
+            sel_phi = self.get_dry_phi(key=key)[:, ix]
         else:
-            return np.sqrt(var_from_modal(self.results.omega, self.results.S[ix_3d]*h(self.results.omega), self.get_dry_phi(key=key)[:,ix]))
+            sel_phi = np.eye(len(modes))
+
+        if key in ['hydro', 'full']:   # only supported for hydro and full currently
+            if key == 'full':
+                tmat = self.tmat_full*1
+                if convert_to is not None:
+                    print('Local nodal csys is strictly not possible - averaging introduced (use with care).')
+            else:
+                tmat = self.tmat*1
+
+            if (convert_to == 'global') and (self.local):
+                sel_phi = tmat.T @ sel_phi
     
+            elif (convert_to == 'local') and (not self.local):
+                sel_phi = tmat @ sel_phi
+        elif convert_to is not None:
+            raise ValueError('convert_to only supported for key="hydro" or "full"; use convert_to=None (output will be given in csys of phi matrix with specified key.')
+    
+        return np.sqrt(var_from_modal(self.results.omega, self.results.S[ix_3d]*h(self.results.omega), sel_phi))
+    
+
     def get_result_expmax(self, T, key=None, h=lambda om: 1.0, modes=None):
         """
         Get the expected maximum value of the results.
