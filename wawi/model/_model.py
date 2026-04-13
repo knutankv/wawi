@@ -718,7 +718,7 @@ class Model:
         self.eldef = part
         self.connect_eldef()
         
-        if 'hydro' in self.modal_dry.phi_full:
+        if (self.modal_dry is not None) and ('hydro' in self.modal_dry.phi_full):
             self.modal_dry.phi_full['full'] = self.modal_dry.phi_full['hydro']
     
         

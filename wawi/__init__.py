@@ -5,7 +5,7 @@ __all__ = ['model', 'fe', 'general', 'identification', 'io',
            'modal','plot','prob','random','signal','structural',
            'time_domain','too19ls','wave','wind','wind_code']
 
-__version__ = "0.0.20"
+__version__ = "0.0.21"
 
 # Other packages
 import numpy as np

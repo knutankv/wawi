@@ -414,6 +414,7 @@ def import_folder(model_folder, pontoon_stl='pontoon.stl', aero_sections='aero_s
 
         eldef = Part(node_matrix, element_matrix, sections=sections,
                      assemble=False, forced_ndofs=6)
+   
             
         if sort_nodes_by_x:
             ix = np.argsort([n.coordinates[0] for n in eldef.nodes])
@@ -422,6 +423,9 @@ def import_folder(model_folder, pontoon_stl='pontoon.stl', aero_sections='aero_s
               
             if 'full' in modal_dry.phi_full:  #adjust phi_full
                 modal_dry.phi_full['full'] = modal_dry.phi_full['full'][n2d_ix(ix, n_dofs=6), :]
+        else:
+            eldef.assign_node_dofcounts()
+            eldef.assign_global_dofs()    
 
         # Assign orientation
         for key in orientations:
