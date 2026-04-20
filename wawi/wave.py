@@ -275,7 +275,7 @@ def get_coh(omega, dx, dy, D1, D2=None, depth=np.inf, n_theta=40,
     if twodimensional:
         return coh2d, theta
     else:
-        coh = np.trapz(coh2d, x=theta, axis=1)
+        coh = np.trapezoid(coh2d, x=theta, axis=1)
 
     return coh
 
@@ -395,7 +395,7 @@ def xsim(x, y, S, D, omega, fs=None, theta=None, n_theta=40, grid_mode=True, pri
         B0 = np.sqrt(2 * Sthis * Dthis * domega * dtheta)
         Bkr = B0*np.exp(-1j*(kappax*x[ix] + kappay*y[ix])) * phase          
         if Bkr.shape[1]>1:
-            Bkr_sum = np.trapz(Bkr, axis=1)
+            Bkr_sum = np.trapezoid(Bkr, axis=1)
         else:
             Bkr_sum = Bkr[:,0]
         
@@ -867,7 +867,7 @@ def dirdist_robust(s, theta0=0, dtheta=1e-4, theta=None):
 
     theta_num = np.unique(np.hstack([np.arange(-np.pi, np.pi+dtheta, dtheta), wrap_to_pi(theta0)]))
     val = np.cos((theta_num-theta0)/2)**(2*s)
-    scaling = 1/np.trapz(val, theta_num)
+    scaling = 1/np.trapezoid(val, theta_num)
 
     def D(theta):
         return interp1d(theta_num, val*scaling)(wrap_to_pi(theta))    

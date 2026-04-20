@@ -26,6 +26,17 @@ from scipy.interpolate import interp1d
 from scipy.linalg import block_diag
 from scipy.signal import savgol_filter
 
+
+# Patch: Avoid Pyvista deprecation warning for pontoon plotting - TODO: remove when PyVista is updated (this warning is internal)
+import warnings
+from pyvista import PyVistaDeprecationWarning
+
+warnings.filterwarnings(
+    "ignore",
+    message="ActiveArrayInfo is deprecated.*",
+    category=PyVistaDeprecationWarning,
+)
+
 '''
 RESULTS SUBMODULE
 '''
@@ -1011,7 +1022,8 @@ class Model:
                             T[:3, :3] = Tn @ Tzrot 
                             
                             mesh_current = copy(pontoon.pontoon_type.mesh)
-                            mesh_current = mesh_current.transform(T).translate(getattr(pontoon.node, x_field)[:3])
+                            mesh_current = mesh_current.transform(T, inplace=False).translate(
+                                            getattr(pontoon.node, x_field)[:3], inplace=False)
                             pl.add_mesh(mesh_current)
 
         # Plot wind arrow

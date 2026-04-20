@@ -21,7 +21,7 @@ def zero_crossing_period(S, omega):
     -----
     Docstring is generated using Github Copilot.
     """
-    return 2*np.pi*np.sqrt(np.trapz(S, x=omega)/np.trapz(omega**2*S, x=omega))
+    return 2*np.pi*np.sqrt(np.trapezoid(S, x=omega)/np.trapezoid(omega**2*S, x=omega))
 
 def stoch_mom(S, omega, n=0):
     """
@@ -45,7 +45,7 @@ def stoch_mom(S, omega, n=0):
     -----
     Docstring is generated using Github Copilot.
     """
-    return np.trapz(S*omega**n, x=omega)
+    return np.trapezoid(S*omega**n, x=omega)
 
 def m0(S, omega):
     """
@@ -285,7 +285,7 @@ def expmax_from_cpsd(S, omega, T, comp_ix, percentile=0.5):
      
     maxval_i = expmax_from_spectrum(S_ii, omega, T)
     
-    R = np.trapz(np.real(S), omega)     # covariance matrix
+    R = np.trapezoid(np.real(S), omega)     # covariance matrix
         
     # Extract variance (element) and entire column of covariance matrix corresponding to the chosen component
     R_ii = R[comp_ix, comp_ix]                  # chosen component of covariance matrix / variance of component

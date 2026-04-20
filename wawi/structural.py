@@ -453,7 +453,7 @@ def var_from_modal(omega, S, phi, only_diagonal=True):
     -----
     Docstring is generated or modified using GitHub Copilot.
     """
-    var = phi @ np.real(np.trapz(S, omega, axis=2)) @ phi.T
+    var = phi @ np.real(np.trapezoid(S, omega, axis=2)) @ phi.T
 
     if only_diagonal==True:
         var = np.diag(var)
@@ -486,8 +486,8 @@ def peakfactor_from_modal(omega, S, phi, T, only_diagonal=True):
     -----
     Docstring is generated or modified using GitHub Copilot.
     """
-    m0 = phi @ np.real(np.trapz(S, omega, axis=2)) @ phi.T
-    m2 = phi @ np.real(np.trapz(S*omega**2, omega, axis=2)) @ phi.T
+    m0 = phi @ np.real(np.trapezoid(S, omega, axis=2)) @ phi.T
+    m2 = phi @ np.real(np.trapezoid(S*omega**2, omega, axis=2)) @ phi.T
     v0 = 1/(2*np.pi) * np.sqrt(m2/m0)
 
     kp = peakfactor(T, v0)
@@ -522,8 +522,8 @@ def expmax_from_modal(omega, S, phi, T, only_diagonal=True):
     -----
     Docstring is generated or modified using GitHub Copilot.
     """
-    m0 = phi @ np.real(np.trapz(S, omega, axis=2)) @ phi.T
-    m2 = phi @ np.real(np.trapz(S*omega**2, omega, axis=2)) @ phi.T
+    m0 = phi @ np.real(np.trapezoid(S, omega, axis=2)) @ phi.T
+    m2 = phi @ np.real(np.trapezoid(S*omega**2, omega, axis=2)) @ phi.T
     v0 = 1/(2*np.pi) * np.sqrt(m2/m0)
     
     expmax = peakfactor(T, v0) * np.sqrt(m0)
