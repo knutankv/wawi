@@ -327,9 +327,145 @@ def simulate_mdof(S, omega, fs=None, tmax=None, reg_factor=None, zero_limit=1e-1
         return p, t
 
 
-def simulate_mdof_direct(S, omega, reg_factor=None):
+def simulate_mdof_direct(S_fun, n_dofs, fs, tmax, omega_min=0.0, omega_max=np.inf, reg_factor=None,
+                         zero_limit=1e-12, phase_angles=None, return_phase_angles=False,
+                         component_scaling=None, psd_fallback=True, batch_size=64):
+    r'''
+    Simulate time series from a cross-spectral density given as a function of frequency, using FFT.
+
+    Same realization as `simulate_mdof`, but the cross-spectral density is evaluated and decomposed at every
+    fft frequency instead of being decomposed on an input frequency axis and interpolated. It is built for a
+    batch of frequencies at a time, decomposed, multiplied by the random phases and discarded, so memory does
+    not grow with the number of frequencies (about ``batch_size*n_dofs**2`` values plus the result).
+
+    Parameters
+    ----------------
+    S_fun : function
+        ``S_fun(omega)``, with omega a 1d numpy array (rad/s), returns the cross-spectral density matrices as a
+        real or complex numpy array of shape (len(omega), n_dofs, n_dofs); same convention as `S` in
+        `simulate_mdof` (one-sided, per rad/s)
+    n_dofs : int
+        number of DOFs (size of the matrices returned by `S_fun`)
+    fs : float
+        sampling frequency in Hz
+    tmax : float
+        duration of realization in seconds
+    omega_min, omega_max : float, optional
+        frequency band in rad/s; fft frequencies outside it carry no energy (as outside the range of `omega`
+        in `simulate_mdof`)
+    reg_factor, zero_limit, psd_fallback : optional
+        as in `spectrum_to_process`, applied to each frequency component
+    phase_angles, return_phase_angles, component_scaling : optional
+        as in `simulate_mdof` (same layout, so phase angles can be exchanged between the two functions)
+    batch_size : int, default=64
+        number of frequency components evaluated and decomposed together
+
+    Returns
+    ----------------
+    p : float
+        time history
+    t : float
+        numpy array with time axis values corresponding to `p`
+    alpha : float
+        phase angles, only returned if `return_phase_angles` is True
+
+    Notes
+    ----------------
+    Time and frequency axes, scaling and phase angles are those of `simulate_mdof`: frequency component k
+    (``omega_k = k*domega``, ``domega = 2*pi/(n/fs)``, ``n = round(tmax*fs)``) is placed in fft bin k; DC and
+    (for even n) the Nyquist bin are zero. With `simulate_mdof` given ``omega`` equal to the fft frequencies in
+    the band and the same phase angles, both functions give the same result to rounding.
+    '''
+    dt = 1/fs
+    n = int(round(tmax/dt))
+    domega = 2*np.pi/(n*dt)
+    n_freqs = n//2 + 1
+    omega_sim = np.arange(n_freqs)*domega
+
+    if phase_angles is None:
+        alpha = 2*np.pi * np.random.rand(n_dofs, n_freqs)
+    else:
+        alpha = np.asarray(phase_angles)[:, :n_freqs]*1
+        if alpha.shape[1] < n_freqs:
+            raise ValueError(f'phase_angles has {alpha.shape[1]} frequency columns; {n_freqs} required.')
+
+    if component_scaling is not None:
+        c = np.tile(np.array(component_scaling), int(np.round(n_dofs/len(component_scaling))))
+        scale_mat = c[np.newaxis,:].T @ c[np.newaxis, :]
+
+    nyquist = np.pi*fs
+    if np.isfinite(omega_max) and omega_max > nyquist*(1+1e-9):
+        warnings.warn(f'omega_max = {omega_max:.3g} rad/s is above the Nyquist frequency pi*fs = {nyquist:.3g} rad/s; '
+                      'content above the Nyquist frequency is not simulated. Increase fs to include it.', RuntimeWarning, stacklevel=2)
+
+    # Frequency components to simulate: inside the band, excluding DC and (for even n) the Nyquist bin
+    ks = np.arange(1, n_freqs - (n % 2 == 0))
+    tol = 1e-9*domega
+    ks = ks[(omega_sim[ks] >= omega_min - tol) & (omega_sim[ks] <= omega_max + tol)]
+
+    P = np.zeros([n_dofs, n_freqs], dtype=complex)
+    eye = np.eye(n_dofs)
+    n_clipped = 0
+    worst = 0.0
+    for start in range(0, len(ks), batch_size):
+        kb = ks[start:start + batch_size]
+        S = np.asarray(S_fun(omega_sim[kb]))
+        if component_scaling is not None:
+            S = S*scale_mat
+        if reg_factor is not None:
+            norm_pre = np.linalg.norm(S)
+            S = S + np.linalg.norm(S, axis=(1, 2))[:, np.newaxis, np.newaxis] * eye * reg_factor
+            if norm_pre > 0 and (np.linalg.norm(S) - norm_pre)/norm_pre > 0.1:
+                raise ValueError('Regularization causes significant increase in norm of S (10%). Please adjust.')
+        if zero_limit is not None:
+            keep = np.max(np.abs(S), axis=(1, 2)) > zero_limit
+            kb, S = kb[keep], S[keep]
+        if len(kb) == 0:
+            continue
+
+        try:
+            B = np.linalg.cholesky(S)
+        except LinAlgError:     # decompose one by one, using the nearest positive semi-definite factor where needed
+            B = np.zeros_like(S)
+            for i in range(S.shape[0]):
+                try:
+                    B[i] = cholesky(S[i], lower=True)
+                except LinAlgError:
+                    if not psd_fallback:
+                        raise
+                    B[i], min_eig = psd_factor(S[i])
+                    n_clipped += 1
+                    worst = min(worst, min_eig / np.mean(np.abs(np.diag(S[i]))))
+
+        # Summation over all columns of B (B is not triangular where the PSD fallback was used)
+        P[:, kb] = np.einsum('kjm,mk->jk', B, np.exp(1j*alpha[:, kb]))
+
+    if n_clipped > 0:
+        warnings.warn(f'Cross-spectral density not positive definite for {n_clipped} of {len(ks)} frequency components; '
+                      f'negative eigenvalues clipped to zero (most negative: {worst:.2e} x mean diagonal).',
+                      RuntimeWarning, stacklevel=2)
+
+    p = np.fft.irfft(np.conj(P) * n * np.sqrt(domega/2), n=n, axis=1)
+
+    # Periodic process: repeat the first sample so that t covers 0 ... tmax
+    p = np.hstack([p, p[:, :1]])
+    t = np.arange(n + 1)*dt
+
+    if component_scaling is not None:
+        p = p/np.tile(c[:, np.newaxis], reps=p.shape[1])
+
+    if return_phase_angles:
+        return p, t, alpha
+    else:
+        return p, t
+
+
+def simulate_mdof_direct_legacy(S, omega, reg_factor=None):
     """
     Simulate time series from given cross-spectral density matrix, using direct summation.
+
+    Formerly named `simulate_mdof_direct`. Slow (sums one cosine per DOF pair and frequency); kept for
+    reference. For FFT-based simulation see `simulate_mdof` and `simulate_mdof_direct`.
 
     Parameters
     ----------------
