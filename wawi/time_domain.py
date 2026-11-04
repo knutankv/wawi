@@ -1,6 +1,7 @@
+import warnings
 import numpy as np
 from scipy.interpolate import interp1d
-from scipy.linalg import block_diag, cholesky
+from scipy.linalg import block_diag, cholesky, LinAlgError
 
 def band_truncate_3d(M3d, n):
     """ 
@@ -96,13 +97,45 @@ def fft_time(omega, t0=0, n_fft=None):
 
     return t   
 
-def spectrum_to_process(S, reg_factor=None, zero_limit=None):
+def psd_factor(S):
+    r"""
+    Factor of the nearest positive semi-definite matrix, used when Cholesky decomposition fails.
+
+    Parameters
+    ----------
+    S : np.ndarray
+        Hermitian (cross-spectral density) matrix, 2D array.
+
+    Returns
+    -------
+    B : np.ndarray
+        2D array with :math:`[B][B]^H = [Q][\Lambda_+][Q]^H`.
+    min_eig : float
+        Smallest eigenvalue of `S` (negative when `S` is indefinite).
+
+    Notes
+    -----
+    With the eigendecomposition :math:`[S] = [Q][\Lambda][Q]^H`, negative eigenvalues are set to zero
+    (:math:`\Lambda_+ = \max(\Lambda, 0)`), which gives the nearest positive semi-definite matrix in the
+    Frobenius norm, and the factor :math:`[B] = [Q]\Lambda_+^{1/2}` is returned. In contrast to the
+    Cholesky factor, B is not lower triangular; simulations must therefore sum over all columns of B.
+
+    Cross-spectral densities built from coherence models that are not positive definite kernels
+    (e.g. exponential decay with the pair-averaged mean wind speed when the mean wind varies between
+    points) can be slightly indefinite at the lowest frequencies.
+    """
+    S = 0.5 * (S + S.conj().T)
+    lam, Q = np.linalg.eigh(S)
+    return Q * np.sqrt(np.clip(lam, 0.0, None)), lam[0]
+
+
+def spectrum_to_process(S, reg_factor=None, zero_limit=None, psd_fallback=True):
     """
     Convert a spectral density matrix to its Cholesky factor process.
-    This function takes a 3D array representing a spectral density matrix `S` and computes its 
-    Cholesky factor for each frequency slice. Optional regularization can be applied to ensure positive definiteness, 
+    This function takes a 3D array representing a spectral density matrix `S` and computes its
+    Cholesky factor for each frequency slice. Optional regularization can be applied to ensure positive definiteness,
     and a zero limit can be set to skip decomposition for near-zero matrices.
-   
+
     Parameters
     ----------
     S : np.ndarray
@@ -111,11 +144,16 @@ def spectrum_to_process(S, reg_factor=None, zero_limit=None):
         Regularization factor to be added to the diagonal of each frequency slice of `S` to ensure positive definiteness.
     zero_limit : float, optional
         Threshold below which the Cholesky decomposition is skipped for a frequency slice.
+    psd_fallback : bool, default=True
+        If the Cholesky decomposition fails for a frequency slice (not positive definite), the factor of the
+        nearest positive semi-definite matrix is used instead (see `psd_factor`) and a warning is issued.
+        If False, the LinAlgError is raised.
 
     Returns
     -------
     B : np.ndarray
-        A 3D array of the same shape as `S`, where each slice is the lower-triangular Cholesky factor of the corresponding slice in `S`.
+        A 3D array of the same shape as `S`, where each slice is the lower-triangular Cholesky factor of the
+        corresponding slice in `S` (or the non-triangular factor from `psd_factor` where Cholesky failed).
 
     Raises
     ------
@@ -135,22 +173,36 @@ def spectrum_to_process(S, reg_factor=None, zero_limit=None):
     if reg_factor is not None:
         for k in range(S.shape[2]):
             S[:,:,k] = S[:,:,k] + np.linalg.norm(S[:,:,k]) * np.eye(S.shape[0]) * reg_factor
-        
+
     if (np.linalg.norm(S)-norm_pre)/norm_pre>0.1:
         raise ValueError('Regularization causes significant increase in norm of S (10%). Please adjust.')
-    
-    # Cholesky decomposition
+
+    # Cholesky decomposition (nearest positive semi-definite factor where it fails)
+    n_clipped = 0
+    worst = 0.0
     for k in range(B.shape[2]):
         if zero_limit is None or np.max(np.max(np.abs(S[:,:,k])))>zero_limit:
-            B[:,:,k] = cholesky(S[:, :, k], lower=True)
+            try:
+                B[:,:,k] = cholesky(S[:, :, k], lower=True)
+            except LinAlgError:
+                if not psd_fallback:
+                    raise
+                B[:,:,k], min_eig = psd_factor(S[:, :, k])
+                n_clipped += 1
+                worst = min(worst, min_eig / np.mean(np.abs(np.diag(S[:, :, k]))))
+
+    if n_clipped > 0:
+        warnings.warn(f'Cross-spectral density not positive definite for {n_clipped} of {B.shape[2]} frequency components; '
+                      f'negative eigenvalues clipped to zero (most negative: {worst:.2e} x mean diagonal).',
+                      RuntimeWarning, stacklevel=2)
     return B
         
 
-def simulate_mdof(S, omega, fs=None, tmax=None, reg_factor=None, zero_limit=1e-12, 
-                  phase_angles=None, return_phase_angles=False, interpolation_kind='linear', 
-                  component_scaling=None, print_status=False):
-    
-    '''
+def simulate_mdof(S, omega, fs=None, tmax=None, reg_factor=None, zero_limit=1e-12,
+                  phase_angles=None, return_phase_angles=False, interpolation_kind='linear',
+                  component_scaling=None, print_status=False, psd_fallback=True):
+
+    r'''
     Simulate time series from given cross-spectral density matrix, using FFT.
 
     Parameters
@@ -184,65 +236,91 @@ def simulate_mdof(S, omega, fs=None, tmax=None, reg_factor=None, zero_limit=1e-1
         can help if some components are much smaller than others; size should match number of DOFs in S
     print_status : False, optional
         whether or not to print status messages
+    psd_fallback : bool, default=True
+        if S is not positive definite at a frequency component, use the factor of the nearest positive
+        semi-definite matrix instead of failing; passed to `spectrum_to_process`
 
     Returns
     ----------------
     p : float
-        time history 
+        time history
     t : float
         numpy array with time axis values corresponding to `p`
     alpha : float
         phase angles, only returned if `return_phase_angles` is True
+
+    Notes
+    ----------------
+    The realization holds ``n = round(tmax*fs)`` samples per period, with ``domega = 2*pi/(n/fs)``.
+    Frequency component k (``omega_k = k*domega``, k = 1 ... below the Nyquist frequency ``pi*fs``) is placed
+    in fft bin k, and each DOF is synthesized as
+
+    .. math::
+
+        p_j(t) = \sum_k \sqrt{2\Delta\omega}\; \mathrm{Re}\Big( \sum_m B_{jm}(\omega_k)\, e^{i\alpha_{mk}}\, e^{-i\omega_k t} \Big)
+
+    by an inverse real FFT. S is interpreted as one-sided per rad/s and is zero outside the range of `omega`
+    (no energy below the lowest or above the highest input frequency); the DC component is zero. Content above
+    the Nyquist frequency cannot be represented and is dropped with a warning. As the process is periodic,
+    the first sample is repeated at the end, so that `t` runs from 0 to tmax (n+1 samples).
+
+    ``phase_angles[m, k]`` belongs to frequency ``omega_k``; arrays with more columns than needed are truncated.
     '''
-    
-    if omega[0] !=0:
-        omega = np.insert(omega, 0, 0)
-        S = np.dstack([0*S[:,:,0], S])
-    
+
     if component_scaling is not None:
         c = np.tile(np.array(component_scaling), int(np.round(S.shape[0]/len(component_scaling))))
         scale_mat = c[np.newaxis,:].T @ c[np.newaxis, :]
         for k in range(S.shape[2]):
             S[:,:,k] = scale_mat * S[:,:,k]
 
-    B = spectrum_to_process(S, reg_factor=reg_factor, zero_limit=zero_limit)  
+    B = spectrum_to_process(S, reg_factor=reg_factor, zero_limit=zero_limit, psd_fallback=psd_fallback)
     B = interp1d(omega, B, axis=2, fill_value=0, kind=interpolation_kind, bounds_error=False)
 
     n_dofs = S.shape[0]
 
     if fs is None:
-        omega_max = omega[-1]
-    else:
-        omega_max = fs*(np.pi*2)
-        if omega_max>omega[-1] and print_status:
-            print('fs too high (larger than largest omega value in input) - zero padding automatically enforced')
-        
-    if tmax is None:
-        domega = omega[1]-omega[0]
-    else:
-        domega = np.pi*2/tmax
+        fs = 2*omega[-1]/(2*np.pi)      # Nyquist frequency equals the largest input frequency
 
-    omega = np.arange(omega[0], omega_max+domega, domega)
-    
-    # Summation
-    p = np.zeros([n_dofs, len(omega)])    
-    Bi = B(omega)
+    if tmax is None:
+        tmax = 2*np.pi/(omega[1]-omega[0])
+
+    # Time and frequency axes: one period of n samples, omega_sim[k] is placed in fft bin k
+    dt = 1/fs
+    n = int(round(tmax/dt))
+    domega = 2*np.pi/(n*dt)
+    n_freqs = n//2 + 1
+    omega_sim = np.arange(n_freqs)*domega
+
+    nyquist = np.pi*fs
+    if omega[-1] > nyquist*(1+1e-9) and np.any(np.abs(S[:, :, omega > nyquist]) > 0):
+        warnings.warn(f'Input spectrum extends to {omega[-1]:.3g} rad/s, above the Nyquist frequency pi*fs = {nyquist:.3g} rad/s; '
+                      'content above the Nyquist frequency is not simulated. Increase fs to include it.', RuntimeWarning, stacklevel=2)
+    elif fs*2*np.pi > 2*omega[-1]*(1+1e-9) and print_status:
+        print('fs higher than twice the largest omega value in input - zero padding automatically enforced')
 
     if phase_angles is None:
-        alpha = 2*np.pi * np.random.rand(n_dofs, len(omega))
+        alpha = 2*np.pi * np.random.rand(n_dofs, n_freqs)
     else:
-        alpha = phase_angles*1
-        
-    for j in range(n_dofs):   
-        for m in range(j+1):
-            p[j, :] = p[j, :] + (np.sqrt(2*domega) * 
-                     np.real(np.fft.fft(Bi[j, m, :] * np.exp(1j*alpha[m, :]))))
-        
+        alpha = np.asarray(phase_angles)[:, :n_freqs]*1
+        if alpha.shape[1] < n_freqs:
+            raise ValueError(f'phase_angles has {alpha.shape[1]} frequency columns; {n_freqs} required.')
+
+    # Summation over all columns of B (B is not triangular where the PSD fallback was used)
+    Bi = B(omega_sim)
+    Bi[:, :, 0] = 0                 # DC
+    if n % 2 == 0:
+        Bi[:, :, -1] = 0            # Nyquist bin (cannot carry a random phase)
+
+    P = np.einsum('jmk,mk->jk', Bi, np.exp(1j*alpha))
+    p = np.fft.irfft(np.conj(P) * n * np.sqrt(domega/2), n=n, axis=1)
+
+    # Periodic process: repeat the first sample so that t covers 0 ... tmax
+    p = np.hstack([p, p[:, :1]])
+    t = np.arange(n + 1)*dt
+
     if component_scaling is not None:
         p = p/np.tile(c[:, np.newaxis], reps=p.shape[1])
-        
-    t = fft_time(omega)
-    
+
     if return_phase_angles:
         return p, t, alpha
     else:
@@ -274,19 +352,20 @@ def simulate_mdof_direct(S, omega, reg_factor=None):
     
     """
     B = spectrum_to_process(S, reg_factor)
-    
+
     # Summation
     domega = omega[1] - omega[0]
-    
+
     t = fft_time(omega)
     p = np.zeros([B.shape[0], len(t)])
-    for j in range(B.shape[0]): 
-        
-        # Eq. 19 computed below for each j
-        for m in range(j+1):
+    phi = 2*np.pi * np.random.rand(B.shape[1], len(omega))     # one phase per (m, k), shared by all j
+
+    for j in range(B.shape[0]):
+
+        # Eq. 19 computed below for each j (all m: B is not triangular where the PSD fallback was used)
+        for m in range(B.shape[1]):
             for k, omega_k in enumerate(omega):
-                phi = 2*np.pi * np.random.rand()
-                p[j, :] = p[j, :] + np.sqrt(2*domega) * np.real(B[j, m, k] * np.exp(1j*(omega_k*t + phi)))
-    
+                p[j, :] = p[j, :] + np.sqrt(2*domega) * np.real(B[j, m, k] * np.exp(1j*(omega_k*t + phi[m, k])))
+
     return p, t
     

@@ -255,7 +255,11 @@ class Pontoon:
         return f'Pontoon object: {self.label} at {self.node}'
 
     def sea_get(self, parameter):
-        return self.seastate.get_at_pos(parameter, self.node.x[0], self.node.x[1])
+        if self.seastate is None:
+            return self.seastate.get_at_pos(parameter, self.node.x[0], self.node.x[1])
+        else:
+            return self.seastate.get_at_pos(parameter, self.node.x[0], self.node.x[1])
+        
 
 
     @property

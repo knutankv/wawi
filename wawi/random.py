@@ -257,6 +257,75 @@ def peakfactor_from_spectrum(S, omega, T):
 
 def expmax_from_cpsd(S, omega, T, comp_ix, percentile=0.5):
     """
+    Estimate the expected maximum load vector for a multi-degree-of-freedom (MDOF)
+    system, conditioned on a leading quantity being at its expected maximum.
+
+    The leading quantity is either a single response component (comp_ix given as an
+    int) or a general linear response r = a^T X (comp_ix given as an influence
+    vector a). Conditioning on a response direction is the correct choice when the
+    governing design check is a combination over several foundations (e.g. total
+    transverse shear, torsion, resultant at the deck): components that are
+    uncorrelated with the leading *component* would be set to zero, but they still
+    contribute to a combined response and are captured here via a^T R a.
+
+    Parameters
+    ----------
+    S : ndarray
+        Cross-spectral density matrix (Ndofs x Ndofs x Nfreqs).
+    omega : array_like
+        Angular frequency values.
+    T : float
+        Duration over which the expected maximum is calculated.
+    comp_ix : int or array_like
+        Leading quantity. If int: index of the component to maximise (original
+        behaviour). If a 1D array of length Ndofs: influence vector a defining the
+        response r = a^T X to maximise.
+    percentile : float, optional
+        Percentile for the conditioned (following) components (default 0.5 -->
+        conditional expected values). Note this only lifts the *following*
+        components, not the leading response.
+
+    Returns
+    -------
+    ndarray
+        Load vector over all components that produces the leading quantity at its
+        expected maximum, with the following components at the given percentile.
+    """
+    R = np.trapezoid(np.real(S), omega)   # covariance matrix (Ndofs x Ndofs)
+    n = R.shape[0]
+
+    # Build influence vector a for the leading response r = a^T X.
+    # Scalar comp_ix -> unit vector, recovering the original single-component case.
+    a = np.zeros(n)
+    if np.isscalar(comp_ix):
+        a[comp_ix] = 1.0
+    else:
+        a = np.asarray(comp_ix, dtype=float).flatten()
+
+    # Auto-spectrum of the leading response: S_rr(w) = a^T S(w) a (real for
+    # Hermitian S and real a; np.real is numerical cleanup).
+    S_rr = np.real(np.einsum('i,ijk,j->k', a, S, a))
+    maxval_r = expmax_from_spectrum(S_rr, omega, T)
+
+    # Covariance between all components and the leading response, and its variance.
+    r_vec = R @ a                 # Cov(X, r), shape (Ndofs,)
+    R_rr = a @ R @ a              # var(r) = a^T R a  (== trapezoid of S_rr)
+
+    # Conditional statistics given r = maxval_r
+    R_cond = R - np.outer(r_vec, r_vec) / R_rr
+    std_cond = np.sqrt(np.diag(R_cond))
+    mean_cond_max = maxval_r * r_vec / R_rr
+
+    std_cond[np.isnan(std_cond)] = 0.0  # guard perfectly correlated terms
+
+    z_p = norm.ppf(percentile)
+    expmax_all = mean_cond_max + z_p * std_cond
+
+    return expmax_all
+    
+
+def expmax_from_cpsd_legacy(S, omega, T, comp_ix, percentile=0.5):
+    """
     Estimate the expected maximum value for a multi-degree-of-freedom (MDOF) system.
 
     Parameters
