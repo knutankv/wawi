@@ -1,6 +1,7 @@
 import numpy as np
 from .tools import print_progress as pp
 from scipy.interpolate import interp1d
+from scipy.optimize import linear_sum_assignment
 
 def maxreal(phi):
     """
@@ -973,7 +974,11 @@ def freq_eig(K, C, M, omega, omega_ref=None, phi_ref=None, min_mac=0.0, input_fu
         
         A = statespace(K(omega_k), C(omega_k), M(omega_k))
         lambd_k, phi_k = np.linalg.eig(A)
-        mode_ix, ref_ix, __, __ = restructure_as_ref(phi_ref, phi_k, min_mac=min_mac, ensure_unique=False)
+        # One-to-one assignment maximizing total MAC (conjugates distinguished, so each pair is kept once)
+        macs = xmacmat(phi_ref, phi2=phi_k, conjugates=False)
+        ref_ix, mode_ix = linear_sum_assignment(-macs)
+        ok = macs[ref_ix, mode_ix] > min_mac
+        ref_ix, mode_ix = ref_ix[ok], mode_ix[ok]
         lambd[k][ref_ix] = lambd_k[mode_ix]
         phi[k][:, ref_ix] = phi_k[:, mode_ix]
         
@@ -982,6 +987,7 @@ def freq_eig(K, C, M, omega, omega_ref=None, phi_ref=None, min_mac=0.0, input_fu
             
     if not keep_full:
         lambd = [lambd_k[::2] for lambd_k in lambd]
-        phi = [phi_k[::2,::2] for phi_k in phi]
+        ndofs = phi_ref.shape[0]//2
+        phi = [phi_k[:ndofs, ::2] for phi_k in phi]   # displacement part of state vector [x; x']
         
     return lambd, phi
