@@ -1,6 +1,6 @@
 import numpy as np
 import json
-from wawi.wind import quasisteady_ads, ADs, compute_aero_matrices, generic_kaimal_matrix
+from wawi.wind import quasisteady_ads, flatplate_ads, ADs, compute_aero_matrices, generic_kaimal_matrix
 from wawi.general import fun_scale, fun_sum
 from beef.rotation import rodrot
 
@@ -346,6 +346,21 @@ class AeroSection:
         Adds quasisteady aerodynamic coefficients to the AeroSection object.
         '''
         self.ADs = ADs(**quasisteady_ads(self.D, self.B, self.all_lc), ad_type='quasisteady')
+
+    def __setstate__(self, state):
+        '''
+        Restores the object when unpickled (e.g. from a wwi-file) and regenerates
+        quasisteady and flat-plate ADs from the current code. The stored AD functions
+        are serialized bytecode, which crashes the interpreter (access violation) when
+        the file was saved with a different Python version.
+        '''
+        self.__dict__.update(state)
+        ad_type = getattr(self.__dict__.get('ADs'), 'type', None)
+
+        if ad_type == 'quasisteady' or (self.__dict__.get('quasisteady') and ad_type is None):
+            self.add_quasisteady_ads()
+        elif ad_type == 'flatplate':
+            self.ADs = ADs(**flatplate_ads(), ad_type='flatplate')
 
     def __str__(self):
         '''

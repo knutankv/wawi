@@ -40,6 +40,16 @@ or install directly from github:
 pip install git+https://www.github.com/knutankv/wawi.git@main
 ```
 
+Graphical user interface
+------------------------
+A browser-based GUI is included in the package (`wawi.gui`). Start it with
+
+```
+wawi-gui
+```
+
+or `python -m wawi.gui`. See [wawi/gui/README.md](wawi/gui/README.md) for details.
+
 
 How does WAWI work?
 ======================

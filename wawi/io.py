@@ -535,9 +535,10 @@ def load_model(model_path, save_if_nonexistent=False, sort_nodes_by_x=True):
         if save_if_nonexistent:
             convert_to_wwi(model_path)   
     else:
-        with open(model_path, 'rb') as f:
-            model = dill.load(f)
-    
+        if model_path.is_dir():
+            model_path = model_path/'model.wwi'
+        model = Model.from_wwi(model_path)
+
     return model
             
 

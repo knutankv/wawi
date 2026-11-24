@@ -163,6 +163,16 @@ class Hydro:
         if self.seastate is not None:
             self.assign_to_pontoons(**self.seastate.pontoon_options)
 
+    def __setstate__(self, state):
+        # Restore when unpickled. Models saved with older versions store the sea state as
+        # a plain attribute 'seastate' (now a property backed by '_seastate').
+        state = dict(state)
+        if '_seastate' not in state:
+            state['_seastate'] = state.pop('seastate', None)
+        else:
+            state.pop('seastate', None)
+        self.__dict__.update(state)
+
     @property
     def nodelabels(self):
         return np.array([pont.node.label for pont in self.pontoons])

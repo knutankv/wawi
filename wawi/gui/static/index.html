@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WAWI – wave and wind response</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2312324a'/%3E%3Cpath d='M4 20c4-5 8 5 12 0s8 5 12 0' stroke='%236fc3cf' stroke-width='3' fill='none'/%3E%3Cpath d='M5 10h14m-4-3 4 3-4 3' stroke='%23e0b65a' stroke-width='2.4' fill='none'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/static/app.css">
+<script src="/plotly.js" onerror="(function(){var s=document.createElement('script');s.src='https://cdn.plot.ly/plotly-2.35.2.min.js';s.onerror=function(){window.PLOTLY_MISSING=true};document.head.appendChild(s);})()"></script>
+</head>
+<body>
+<div class="app">
+  <nav class="side" id="nav">
+    <div class="brand">
+      <svg width="26" height="26" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="6" fill="#1c4766"/><path d="M4 20c4-5 8 5 12 0s8 5 12 0" stroke="#6fc3cf" stroke-width="3" fill="none"/><path d="M5 10h14m-4-3 4 3-4 3" stroke="#e0b65a" stroke-width="2.4" fill="none"/></svg>
+      <b>WAWI</b><span id="wawiVersion"></span>
+    </div>
+    <div class="navgroup">Workflow</div>
+    <a data-page="model"><span class="step">1</span>Model</a>
+    <a data-page="env"><span class="step">2</span>Environment</a>
+    <a data-page="analysis"><span class="step">3</span>Analysis</a>
+    <a data-page="results"><span class="step">4</span>Results</a>
+    <div class="navgroup">Toolbox</div>
+    <a data-page="tools"><span class="glyph">∿</span>Calculators</a>
+    <a data-page="explorer"><span class="glyph">ƒ</span>API explorer</a>
+    <a data-page="console"><span class="glyph">›_</span>Variables &amp; console</a>
+    <div class="side-foot" id="sideFoot">WAve and WInd response prediction</div>
+  </nav>
+  <main id="main">
+    <header class="top">
+      <h1 id="pageTitle">Model</h1>
+      <div class="chips" id="chips"></div>
+    </header>
+    <div id="pages"></div>
+  </main>
+</div>
+
+<div class="drawer" id="drawer">
+  <div class="head" id="drawerHead" role="button" tabindex="0" aria-label="Show jobs">
+    <span class="dot" id="drawerDot"></span>
+    <span class="status" id="drawerStatus">No jobs yet</span>
+    <div class="prog" id="drawerProg"><i></i></div>
+    <span class="muted small" id="drawerToggle">Jobs ▴</span>
+  </div>
+  <div class="body">
+    <div class="joblist" id="jobList"></div>
+    <div class="joblog">
+      <div class="row"><b id="jobTitle" class="small">Select a job</b><span class="spacer"></span>
+        <button class="btn small danger" id="jobCancel" disabled>Cancel job</button>
+        <button class="btn small ghost" id="jobClear">Clear finished</button></div>
+      <pre id="jobLog"></pre>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalBg"><div class="modal" id="modal"></div></div>
+<div class="toasts" id="toasts"></div>
+<script src="/static/core.js"></script>
+<script src="/static/viewer.js"></script>
+<script src="/static/page_model.js"></script>
+<script src="/static/page_env.js"></script>
+<script src="/static/page_analysis.js"></script>
+<script src="/static/page_results.js"></script>
+<script src="/static/page_tools.js"></script>
+<script src="/static/page_explorer.js"></script>
+<script src="/static/main.js"></script>
+</body>
+</html>

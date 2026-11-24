@@ -37,6 +37,100 @@ warnings.filterwarnings(
     category=PyVistaDeprecationWarning,
 )
 
+
+'''
+LOADING OF WWI-FILES (with compatibility for files saved with older package versions)
+'''
+class _LegacyActiveArrayInfo:
+    '''
+    Stand-in for pyvista.core.dataset.ActiveArrayInfo, which is pickled inside meshes
+    (e.g., PontoonType.mesh) saved with older pyvista versions but no longer exists.
+    Converted to pyvista's current representation after loading.
+    '''
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+
+
+_LEGACY_CLASSES = {('pyvista.core.dataset', 'ActiveArrayInfo'): _LegacyActiveArrayInfo}
+
+
+class _WwiUnpickler(dill.Unpickler):
+    def find_class(self, module, name):
+        try:
+            return super().find_class(module, name)
+        except (AttributeError, ImportError):
+            if (module, name) in _LEGACY_CLASSES:
+                return _LEGACY_CLASSES[(module, name)]
+            raise
+
+
+def _convert_legacy_active_array_info(info):
+    from pyvista.core.dataset import ActiveArrayInfoTuple
+    association = info.__dict__.get('association', 0)
+    if not isinstance(association, pv.FieldAssociation):
+        association = pv.FieldAssociation(association)
+    return ActiveArrayInfoTuple(association, info.__dict__.get('name'))
+
+
+def _fix_legacy_objects(obj, seen=None, depth=0):
+    '''Replace legacy stand-ins (see `_LegacyActiveArrayInfo`) found in the loaded object tree.'''
+    if seen is None:
+        seen = set()
+    if id(obj) in seen or depth > 12 or isinstance(obj, (np.ndarray, str, bytes, int, float, complex)):
+        return
+    seen.add(id(obj))
+
+    if isinstance(obj, dict):
+        items = list(obj.items())
+        target = obj
+    elif isinstance(obj, list):
+        items = list(enumerate(obj))
+        target = obj
+    elif isinstance(obj, tuple):
+        for v in obj:
+            _fix_legacy_objects(v, seen, depth+1)
+        return
+    elif hasattr(obj, '__dict__'):
+        items = list(vars(obj).items())
+        target = None
+    else:
+        return
+
+    for key, val in items:
+        if isinstance(val, _LegacyActiveArrayInfo):
+            val = _convert_legacy_active_array_info(val)
+            if target is None:
+                object.__setattr__(obj, key, val)
+            else:
+                target[key] = val
+        else:
+            _fix_legacy_objects(val, seen, depth+1)
+
+
+def load_wwi(path):
+    '''
+    Load WAWI model from wwi-file (pickled with dill).
+
+    Files saved with older versions of pyvista (meshes of pontoon types) are converted
+    to work with the installed version.
+
+    Parameters
+    -----------
+    path : str
+        path of wwi-file
+
+    Returns
+    -----------
+    model : `wawi.model.Model`
+        WAWI model
+    '''
+    with open(path, 'rb') as f:
+        unpickler = _WwiUnpickler(f)
+        model = unpickler.load()
+
+    _fix_legacy_objects(model)
+    return model
+
 '''
 RESULTS SUBMODULE
 '''
@@ -509,10 +603,7 @@ class Model:
 
     @staticmethod    #alternative constructor
     def from_wwi(path):
-        with open(path, 'rb') as f:
-            model = dill.load(f)
-    
-        return model
+        return load_wwi(path)
 
 
     def assign_drag_elements(self, drag_elements):
